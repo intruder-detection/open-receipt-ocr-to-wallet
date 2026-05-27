@@ -1,10 +1,14 @@
-# Open Receipt OCR
+# Open Receipt OCR to Wallet
 
-Open Receipt OCR is a powerful, flexible, and extensible OCR (Optical Character Recognition) platform designed specifically for receipts and documents. It supports a wide range of OCR providers, from cloud-based AI models to local engines.
+Open Receipt OCR to Wallet is a powerful, flexible, and extensible OCR (Optical Character Recognition) platform designed specifically to digitize receipts and send them directly to **Wallet by BudgetBakers**. It supports a wide range of OCR providers, from cloud-based AI models to local engines, parsing your receipts and syncing the expenses to your Wallet account seamlessly.
 
 ## 📸 Screenshots & Demo
 
 <video src="docs/assets/screenshots/open-receipt-ocr.mp4" controls width="100%"></video>
+
+| OCR Results & Send to Wallet | Wallet Account & Category Selection | Wallet Record Created |
+|:---:|:---:|:---:|
+| ![Send to Wallet](docs/assets/screenshots/wallet-integration.png) | ![Wallet Dialog](docs/assets/screenshots/wallet-dialog.png) | ![Wallet Record](docs/assets/screenshots/wallet-record.png) |
 
 | Dashboard | OCR Jobs (Card View) | OCR Jobs (Table View) |
 |:---:|:---:|:---:|

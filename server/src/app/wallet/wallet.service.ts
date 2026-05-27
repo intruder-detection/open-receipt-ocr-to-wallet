@@ -56,7 +56,13 @@ export class WalletService {
   private readonly logger = new Logger(WalletService.name);
   private readonly baseUrl = 'https://rest.budgetbakers.com/wallet';
 
-  constructor(private secretProvider: SecretProvider) {}
+  private cachedAccounts: GetAccountsResponse | null = null;
+  private cachedAccountsTime = 0;
+  private cachedCategories: GetCategoriesResponse | null = null;
+  private cachedCategoriesTime = 0;
+  private readonly CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+  constructor(private secretProvider: SecretProvider) { }
 
   private async getHeaders() {
     const token = (await this.secretProvider.getSecret(AppSecret.BudgetBakersToken)) || '';
@@ -70,13 +76,22 @@ export class WalletService {
   }
 
   async getAccounts(): Promise<GetAccountsResponse> {
+    const now = Date.now();
+    if (this.cachedAccounts && (now - this.cachedAccountsTime) < this.CACHE_TTL) {
+      this.logger.debug('Returning cached accounts');
+      return this.cachedAccounts;
+    }
+
     try {
       const headers = await this.getHeaders();
       const response = await fetch(`${this.baseUrl}/v1/api/accounts`, { headers });
       if (!response.ok) {
         throw new Error(`Failed to fetch accounts: ${response.statusText}`);
       }
-      return (await response.json()) as GetAccountsResponse;
+      const data = (await response.json()) as GetAccountsResponse;
+      this.cachedAccounts = data;
+      this.cachedAccountsTime = now;
+      return data;
     } catch (error) {
       this.logger.error('Error fetching accounts from BudgetBakers', error);
       throw new HttpException('Failed to fetch accounts', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -84,13 +99,22 @@ export class WalletService {
   }
 
   async getCategories(): Promise<GetCategoriesResponse> {
+    const now = Date.now();
+    if (this.cachedCategories && (now - this.cachedCategoriesTime) < this.CACHE_TTL) {
+      this.logger.debug('Returning cached categories');
+      return this.cachedCategories;
+    }
+
     try {
       const headers = await this.getHeaders();
       const response = await fetch(`${this.baseUrl}/v1/api/categories`, { headers });
       if (!response.ok) {
         throw new Error(`Failed to fetch categories: ${response.statusText}`);
       }
-      return (await response.json()) as GetCategoriesResponse;
+      const data = (await response.json()) as GetCategoriesResponse;
+      this.cachedCategories = data;
+      this.cachedCategoriesTime = now;
+      return data;
     } catch (error) {
       this.logger.error('Error fetching categories from BudgetBakers', error);
       throw new HttpException('Failed to fetch categories', HttpStatus.INTERNAL_SERVER_ERROR);
