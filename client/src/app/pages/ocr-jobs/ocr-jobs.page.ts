@@ -1,6 +1,7 @@
 import { Component, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { OcrJobService, OCR_PROVIDER_ICONS, LOCAL_PROVIDERS } from '@services/ocr-job.service';
+import { WalletService, WalletAccount, WalletCategory } from '@services/wallet.service';
 import { OcrOutputParserService } from '@app/pipes/parsers/ocr-output-parser.service';
 import {
   OcrJob,
@@ -73,6 +74,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
   private confirmationService = inject(ConfirmationService);
   private sanitizer = inject(DomSanitizer);
   private ocrOutputParser = inject(OcrOutputParserService);
+  private walletService = inject(WalletService);
 
   private pollingSubscription?: Subscription;
   private detailPollingSubscription?: Subscription;
@@ -163,6 +165,71 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
     this.selectedExecution = this.getLatestExecution(file) || null;
     this.safeUrl = file ? this.getSafeUrl(file.filename) : null;
     this.imageLoading.set(!!file && this.isFileImage(file.originalName));
+  }
+
+  // Wallet Dialog State
+  showWalletDialog = false;
+  walletAccounts: WalletAccount[] = [];
+  walletCategories: WalletCategory[] = [];
+  walletCategoriesGrouped: { label: string; items: WalletCategory[] }[] = [];
+  selectedWalletAccount: WalletAccount | null = null;
+  selectedWalletCategory: WalletCategory | null = null;
+  sendingToWallet = false;
+
+  openWalletDialog() {
+    this.showWalletDialog = true;
+    this.walletService.getAccounts().subscribe({
+      next: (accounts) => (this.walletAccounts = accounts),
+      error: (err) => console.error('Failed to fetch accounts', err),
+    });
+    this.walletService.getCategories().subscribe({
+      next: (categories) => {
+        this.walletCategories = categories;
+        const groups = new Map<string, WalletCategory[]>();
+        for (const cat of categories) {
+          // Some categories might not have an envelope or groupName
+          const groupName = cat.envelope?.groupName || cat.groupName || 'Other';
+          if (!groups.has(groupName)) {
+            groups.set(groupName, []);
+          }
+          groups.get(groupName)!.push(cat);
+        }
+        this.walletCategoriesGrouped = Array.from(groups.entries())
+          .map(([label, items]) => ({
+            label,
+            items,
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+      },
+      error: (err) => console.error('Failed to fetch categories', err),
+    });
+  }
+
+  sendToWallet() {
+    if (!this.selectedWalletAccount || !this.selectedWalletCategory || !this.selectedExecution?.ocrData) {
+      this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Please select an account and a category.' });
+      return;
+    }
+
+    const ocrData = this.selectedExecution.ocrData;
+    const parsed = this.ocrOutputParser.parse(ocrData, this.selectedExecution.ocrProvider);
+    const note = parsed && parsed.markdown ? parsed.markdown : ocrData;
+
+    this.sendingToWallet = true;
+    this.walletService.createRecord(this.selectedWalletAccount.id, this.selectedWalletCategory.id, note).subscribe({
+      next: () => {
+        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Sent to Wallet successfully.' });
+        this.showWalletDialog = false;
+        this.sendingToWallet = false;
+        this.selectedWalletAccount = null;
+        this.selectedWalletCategory = null;
+      },
+      error: (err) => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to send to Wallet.' });
+        console.error(err);
+        this.sendingToWallet = false;
+      },
+    });
   }
 
   onImageLoad() {

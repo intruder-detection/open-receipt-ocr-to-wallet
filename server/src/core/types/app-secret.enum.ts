@@ -71,6 +71,9 @@ export enum AppSecret {
   InfisicalProjectId = 'INFISICAL_PROJECT_ID',
   InfisicalEnvironment = 'INFISICAL_ENVIRONMENT',
   InfisicalSiteUrl = 'INFISICAL_SITE_URL',
+
+  // ─── BudgetBakers ─────────────────────────────────────────────────────────────
+  BudgetBakersToken = 'BUDGET_BAKERS_TOKEN',
 }
 
 /**

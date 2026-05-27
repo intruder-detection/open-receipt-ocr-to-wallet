@@ -9,7 +9,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test --include=$(node -e 'process.stdout.write(require(\"path\").resolve(__dirname, \"tests/**/*.spec.ts\"))')",
     "lint": "ng lint",
-    "format": "prettier --write \"src/**/*.{ts,html,scss,json,css}\""
+    "format": "prettier --write \"src/**/*.{ts,html,scss,json,css}\" --experimental-cli"
   },
   "private": true,
   "packageManager": "npm@10.9.3",
