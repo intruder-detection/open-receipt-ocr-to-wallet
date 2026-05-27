@@ -116,10 +116,23 @@ export class OcrJobsService {
           status: OcrFileStatus.Processing,
         });
 
+        let extraData: Record<string, string> | undefined;
+        if (ocrProvider === OcrProvider.GeminiToWallet) {
+          const resolvedAccountId = accountId || (await this.secretProvider.getSecret(AppSecret.DefaultWalletAccountId));
+          const resolvedCategoryId = categoryId || (await this.secretProvider.getSecret(AppSecret.DefaultWalletCategoryId));
+          if (!resolvedAccountId || !resolvedCategoryId) {
+            throw new BadRequestException(
+              'GeminiToWallet provider requires accountId and categoryId. Provide them in the request or set DEFAULT_WALLET_ACCOUNT_ID and DEFAULT_WALLET_CATEGORY_ID env vars.',
+            );
+          }
+          extraData = { accountId: resolvedAccountId, categoryId: resolvedCategoryId };
+        }
+
         const execution = await this.ocrExecutionsDao.create(txn, {
           fileId: ocrFile.id,
           ocrProvider,
           status: OcrExecutionStatus.Pending,
+          extraData,
         });
 
         executions.push({ id: execution.id, fileId: ocrFile.id });

@@ -60,6 +60,7 @@ export interface WalletConfigResponse {
 }
 
 export interface WalletRecordPayload {
+  extraction_scratchpad: string;
   accountId: string;
   amount: {
     value: number;
@@ -88,8 +89,6 @@ export class WalletService {
 
   private async getHeaders() {
     const token = (await this.secretProvider.getSecret(AppSecret.BudgetBakersToken)) || '';
-
-    this.logger.log('Token: ', token);
 
     return {
       'Content-Type': 'application/json',
@@ -260,8 +259,8 @@ export class WalletService {
   async getConfig(): Promise<WalletConfigResponse> {
     const useWalletStr = await this.secretProvider.getSecret(AppSecret.UseWalletOcrProcessorProvider);
     const useWalletOcrProcessorProvider = useWalletStr === 'true';
-    const defaultAccountId = await this.secretProvider.getSecretOrThrow(AppSecret.DefaultWalletAccountId);
-    const defaultCategoryId = await this.secretProvider.getSecretOrThrow(AppSecret.DefaultWalletCategoryId);
+    const defaultAccountId = (await this.secretProvider.getSecret(AppSecret.DefaultWalletAccountId)) || undefined;
+    const defaultCategoryId = (await this.secretProvider.getSecret(AppSecret.DefaultWalletCategoryId)) || undefined;
 
     return {
       useWalletOcrProcessorProvider,

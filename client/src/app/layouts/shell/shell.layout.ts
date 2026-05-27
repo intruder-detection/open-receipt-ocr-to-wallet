@@ -1,4 +1,5 @@
-import { Component, inject, signal, effect, computed } from '@angular/core';
+import { Component, inject, signal, effect, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { ConfigDialogComponent } from '@components/config-dialog/config-dialog.component';
@@ -22,6 +23,10 @@ export class ShellLayoutComponent {
   collapsed = computed(() => this.configService.sidebarCollapsed());
 
   constructor() {
+    this.configService.openSettings$.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.showConfig.set(true);
+    });
+
     effect(() => {
       const lang = this.configService.language();
       this.translocoService.setActiveLang(lang);

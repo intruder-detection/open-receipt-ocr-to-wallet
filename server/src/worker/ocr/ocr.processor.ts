@@ -130,7 +130,7 @@ export class OcrProcessor extends WorkerHost implements OnModuleInit {
           ocrData = await this.llamaCppProcessor.process(file, executionId);
           break;
         case OcrProvider.GeminiToWallet:
-          ocrData = await this.geminiToWalletProcessor.process(file, executionId);
+          ocrData = await this.geminiToWalletProcessor.process(file, executionId, execution);
           break;
         default:
           throw new Error(`OCR Provider "${execution.ocrProvider as string}" is not yet implemented.`);

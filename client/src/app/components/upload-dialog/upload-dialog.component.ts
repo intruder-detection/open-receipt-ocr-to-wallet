@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, Output, signal, ViewChild, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, signal, computed, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OcrJobService, OCR_PROVIDER_ICONS, LOCAL_PROVIDERS } from '@services/ocr-job.service';
 
@@ -57,7 +57,7 @@ export class UploadDialogComponent implements OnInit {
   @ViewChild('fileUpload') fileUpload!: FileUpload;
 
   private ocrJobService = inject(OcrJobService);
-  private configService = inject(ConfigService);
+  public configService = inject(ConfigService);
   private translocoService = inject(TranslocoService);
   private messageService = inject(MessageService);
   private walletService = inject(WalletService);
@@ -66,6 +66,7 @@ export class UploadDialogComponent implements OnInit {
     this._visible = val;
     if (val) {
       this.reset();
+      this.loadWalletConfig();
     }
   }
   get visible() {
@@ -88,13 +89,21 @@ export class UploadDialogComponent implements OnInit {
   categories = signal<WalletCategory[]>([]);
   selectedAccountId = signal<string | null>(null);
   selectedCategoryId = signal<string | null>(null);
+  walletConfigMissing = computed(() => !this.selectedAccountId() || !this.selectedCategoryId());
 
   ngOnInit() {
+    this.loadWalletConfig();
+  }
+
+  private loadWalletConfig() {
     this.walletService.getConfig().subscribe((config) => {
       this.useWalletOcrProvider.set(config.useWalletOcrProcessorProvider);
       if (config.useWalletOcrProcessorProvider) {
-        this.selectedAccountId.set(config.defaultAccountId || null);
-        this.selectedCategoryId.set(config.defaultCategoryId || null);
+        // Priority: locally stored (from settings dialog) > server env var defaults
+        const storedAccountId = this.configService.walletAccountId();
+        const storedCategoryId = this.configService.walletCategoryId();
+        this.selectedAccountId.set(storedAccountId || config.defaultAccountId || null);
+        this.selectedCategoryId.set(storedCategoryId || config.defaultCategoryId || null);
 
         this.walletService.getAccounts().subscribe((accounts) => this.accounts.set(accounts));
         this.walletService.getCategories().subscribe((categories) => this.categories.set(categories));
