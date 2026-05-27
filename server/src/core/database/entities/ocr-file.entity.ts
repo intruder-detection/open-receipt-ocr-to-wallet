@@ -28,6 +28,12 @@ export class OcrFileEntity extends WithModificationDates {
   })
   status!: OcrFileStatus;
 
+  @Column({ name: 'wallet_record_id', type: 'varchar', nullable: true })
+  walletRecordId?: string;
+
+  @Column({ name: 'wallet_record', type: 'simple-json', nullable: true })
+  walletRecord?: any;
+
   @OneToMany(() => OcrExecutionEntity, (execution) => execution.file, { cascade: true })
   executions!: OcrExecutionEntity[];
 }

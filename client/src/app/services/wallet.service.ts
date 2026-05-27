@@ -37,6 +37,7 @@ export interface WalletRecordResponse {
     success: boolean;
     error?: string;
     errorType?: string;
+    id?: string;
   }[];
 }
 
@@ -65,8 +66,9 @@ export class WalletService {
     );
   }
 
-  createRecord(accountId: string, categoryId: string, note: string): Observable<WalletRecordResponse> {
+  createRecord(fileId: number, accountId: string, categoryId: string, note: string): Observable<WalletRecordResponse> {
     return this.http.post<WalletRecordResponse>(`${this.apiUrl}/records`, {
+      fileId,
       accountId,
       categoryId,
       note,

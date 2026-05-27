@@ -421,7 +421,11 @@
             <div class="flex items-center justify-between mb-4">
               <h3 class="text-xl font-bold text-surface-900 dark:text-surface-0">{{ t('ocrJobs.detail.results') }}</h3>
               @if (selectedExecution?.status === OcrExecutionStatus.Completed) {
-              <p-button label="Send To Wallet" icon="pi pi-wallet" severity="success" size="small" (onClick)="openWalletDialog()" />
+                @if (!selectedFile?.walletRecordId) {
+                  <p-button label="Send To Wallet" icon="pi pi-wallet" severity="success" size="small" (onClick)="openWalletDialog()" />
+                } @else {
+                  <p-button label="Saved in Wallet" icon="pi pi-check" severity="secondary" size="small" [disabled]="true" />
+                }
               }
             </div>
 

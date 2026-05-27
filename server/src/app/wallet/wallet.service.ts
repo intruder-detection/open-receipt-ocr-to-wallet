@@ -2,6 +2,8 @@ import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { CreateWalletRecordDto } from './dto/create-wallet-record.dto';
 import { SecretProvider } from '@core/secrets/secret-provider.interface';
 import { AppSecret } from '@core/types/app-secret.enum';
+import { OcrFilesDao } from '@core/database/daos/ocr-files.dao';
+import { NoTxn } from '@core/database/txn-def.interface';
 
 export interface WalletAccount {
   id: string;
@@ -62,7 +64,10 @@ export class WalletService {
   private cachedCategoriesTime = 0;
   private readonly CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
-  constructor(private secretProvider: SecretProvider) { }
+  constructor(
+    private secretProvider: SecretProvider,
+    private ocrFilesDao: OcrFilesDao,
+  ) { }
 
   private async getHeaders() {
     const token = (await this.secretProvider.getSecret(AppSecret.BudgetBakersToken)) || '';
@@ -77,7 +82,7 @@ export class WalletService {
 
   async getAccounts(): Promise<GetAccountsResponse> {
     const now = Date.now();
-    if (this.cachedAccounts && (now - this.cachedAccountsTime) < this.CACHE_TTL) {
+    if (this.cachedAccounts && now - this.cachedAccountsTime < this.CACHE_TTL) {
       this.logger.debug('Returning cached accounts');
       return this.cachedAccounts;
     }
@@ -100,7 +105,7 @@ export class WalletService {
 
   async getCategories(): Promise<GetCategoriesResponse> {
     const now = Date.now();
-    if (this.cachedCategories && (now - this.cachedCategoriesTime) < this.CACHE_TTL) {
+    if (this.cachedCategories && now - this.cachedCategoriesTime < this.CACHE_TTL) {
       this.logger.debug('Returning cached categories');
       return this.cachedCategories;
     }
@@ -161,6 +166,23 @@ export class WalletService {
         const result = responseBody.results[0];
         if (result.success !== true) {
           throw new Error(result.error || 'Unknown error occurred while creating record');
+        }
+
+        // Successfully created the record in Wallet, now save the association to the file
+        if (result.id) {
+          const walletRecordData = {
+            id: result.id,
+            accountId: dto.accountId,
+            categoryId: dto.categoryId,
+            amount: 0.01,
+            note: note,
+            recordDate
+          };
+          await this.ocrFilesDao.updateByPk(NoTxn, dto.fileId, { 
+            walletRecordId: result.id,
+            walletRecord: walletRecordData
+          });
+          this.logger.log(`Associated Wallet Record ${result.id} with OCR File ${dto.fileId}`);
         }
       }
 
