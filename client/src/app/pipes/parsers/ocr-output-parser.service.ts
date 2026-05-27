@@ -29,6 +29,7 @@ export class OcrOutputParserService {
     [OcrProvider.Tesseract]: new TesseractParser(),
     [OcrProvider.OpenAi]: new OpenAiParser(),
     [OcrProvider.LlamaCpp]: new LlamaCppParser(),
+    [OcrProvider.GeminiToWallet]: new RawJsonParser(),
   };
 
   private readonly fallbackParser = new RawJsonParser();

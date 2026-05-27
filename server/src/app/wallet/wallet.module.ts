@@ -7,5 +7,6 @@ import { DatabaseModule } from '@core/database/database.module';
   imports: [DatabaseModule],
   controllers: [WalletController],
   providers: [WalletService],
+  exports: [WalletService],
 })
 export class WalletModule {}

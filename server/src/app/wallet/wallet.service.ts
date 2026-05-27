@@ -53,6 +53,23 @@ export interface CreateRecordsResponse {
   results?: WalletRecordResult[];
 }
 
+export interface WalletConfigResponse {
+  useWalletOcrProcessorProvider: boolean;
+  defaultAccountId?: string;
+  defaultCategoryId?: string;
+}
+
+export interface WalletRecordPayload {
+  accountId: string;
+  amount: {
+    value: number;
+  };
+  categoryId: string;
+  note: string;
+  paymentType: string;
+  recordDate: string;
+}
+
 @Injectable()
 export class WalletService {
   private readonly logger = new Logger(WalletService.name);
@@ -191,5 +208,65 @@ export class WalletService {
       this.logger.error('Error creating record in BudgetBakers', error);
       throw new HttpException(error instanceof Error ? error.message : 'Failed to create record', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  async createRecordFromPayload(payload: WalletRecordPayload[], fileId: number): Promise<CreateRecordsResponse> {
+    try {
+      const headers = await this.getHeaders();
+      const response = await fetch(`${this.baseUrl}/v1/api/records`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Failed to create record: ${response.statusText} - ${text}`);
+      }
+
+      const responseBody = (await response.json()) as CreateRecordsResponse;
+
+      if (responseBody.results && responseBody.results.length > 0) {
+        const result = responseBody.results[0];
+        if (!result.success) {
+          throw new Error(result.error || 'Unknown error occurred while creating record');
+        }
+
+        if (result.id && payload.length > 0) {
+          const firstRecord = payload[0];
+          const walletRecordData = {
+            id: result.id,
+            accountId: firstRecord.accountId,
+            categoryId: firstRecord.categoryId,
+            amount: firstRecord.amount.value,
+            note: firstRecord.note,
+            recordDate: firstRecord.recordDate,
+          };
+          await this.ocrFilesDao.updateByPk(NoTxn, fileId, {
+            walletRecordId: result.id,
+            walletRecord: walletRecordData,
+          });
+          this.logger.log(`Associated Wallet Record ${result.id} with OCR File ${fileId} using direct payload`);
+        }
+      }
+
+      return responseBody;
+    } catch (error) {
+      this.logger.error('Error creating record in BudgetBakers from payload', error);
+      throw new HttpException(error instanceof Error ? error.message : 'Failed to create record from payload', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getConfig(): Promise<WalletConfigResponse> {
+    const useWalletStr = await this.secretProvider.getSecret(AppSecret.UseWalletOcrProcessorProvider);
+    const useWalletOcrProcessorProvider = useWalletStr === 'true';
+    const defaultAccountId = await this.secretProvider.getSecretOrThrow(AppSecret.DefaultWalletAccountId);
+    const defaultCategoryId = await this.secretProvider.getSecretOrThrow(AppSecret.DefaultWalletCategoryId);
+
+    return {
+      useWalletOcrProcessorProvider,
+      defaultAccountId,
+      defaultCategoryId,
+    };
   }
 }

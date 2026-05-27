@@ -25,4 +25,10 @@ export class WalletController {
   createRecord(@Body() createWalletRecordDto: CreateWalletRecordDto) {
     return this.walletService.createRecord(createWalletRecordDto);
   }
+
+  @Get('config')
+  @ApiOperation({ summary: 'Get Wallet OCR configuration' })
+  getConfig() {
+    return this.walletService.getConfig();
+  }
 }

@@ -4,6 +4,12 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '@environments/environment';
 
+export interface WalletConfigResponse {
+  useWalletOcrProcessorProvider: boolean;
+  defaultAccountId?: string;
+  defaultCategoryId?: string;
+}
+
 export interface WalletAccount {
   id: string;
   name: string;
@@ -73,5 +79,9 @@ export class WalletService {
       categoryId,
       note,
     });
+  }
+
+  getConfig(): Observable<WalletConfigResponse> {
+    return this.http.get<WalletConfigResponse>(`${this.apiUrl}/config`);
   }
 }

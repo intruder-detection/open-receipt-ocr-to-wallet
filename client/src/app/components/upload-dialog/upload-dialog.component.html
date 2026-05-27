@@ -24,6 +24,38 @@
       />
     </div>
 
+    @if (useWalletOcrProvider()) {
+      <div class="flex flex-col gap-2">
+        <label for="accountId" class="text-sm font-medium text-surface-900 dark:text-surface-100">{{ t('upload.account') }}</label>
+        <p-select
+          id="accountId"
+          [options]="accounts()"
+          [ngModel]="selectedAccountId()"
+          (ngModelChange)="selectedAccountId.set($event)"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="t('upload.selectAccount')"
+          class="w-full"
+          appendTo="body"
+        ></p-select>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <label for="categoryId" class="text-sm font-medium text-surface-900 dark:text-surface-100">{{ t('upload.category') }}</label>
+        <p-select
+          id="categoryId"
+          [options]="categories()"
+          [ngModel]="selectedCategoryId()"
+          (ngModelChange)="selectedCategoryId.set($event)"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="t('upload.selectCategory')"
+          class="w-full"
+          appendTo="body"
+        ></p-select>
+      </div>
+    }
+
     <p-fileUpload
       #fileUpload
       name="files"
@@ -65,33 +97,35 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <p-select
-                [options]="ocrOptionGroups"
-                [ngModel]="item.ocrProvider"
-                (ngModelChange)="setProvider(item, $event)"
-                [group]="true"
-                optionGroupLabel="label"
-                optionGroupChildren="items"
-                optionLabel="label"
-                optionValue="value"
-                styleClass="flex-1 sm:w-48"
-                appendTo="body"
-                size="small"
-                [placeholder]="t('upload.selectProvider')"
-              >
-                <ng-template #selectedItem let-opt>
-                  <div class="flex items-center gap-2">
-                    <i [class]="opt.icon"></i>
-                    <span>{{ opt.label }}</span>
-                  </div>
-                </ng-template>
-                <ng-template #item let-opt>
-                  <div class="flex items-center gap-2">
-                    <i [class]="opt.icon"></i>
-                    <span>{{ opt.label }}</span>
-                  </div>
-                </ng-template>
-              </p-select>
+              @if (!useWalletOcrProvider()) {
+                <p-select
+                  [options]="ocrOptionGroups"
+                  [ngModel]="item.ocrProvider"
+                  (ngModelChange)="setProvider(item, $event)"
+                  [group]="true"
+                  optionGroupLabel="label"
+                  optionGroupChildren="items"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="flex-1 sm:w-48"
+                  appendTo="body"
+                  size="small"
+                  [placeholder]="t('upload.selectProvider')"
+                >
+                  <ng-template #selectedItem let-opt>
+                    <div class="flex items-center gap-2">
+                      <i [class]="opt.icon"></i>
+                      <span>{{ opt.label }}</span>
+                    </div>
+                  </ng-template>
+                  <ng-template #selectItem let-opt>
+                    <div class="flex items-center gap-2">
+                      <i [class]="opt.icon"></i>
+                      <span>{{ opt.label }}</span>
+                    </div>
+                  </ng-template>
+                </p-select>
+              }
               @if (isImage(item.file)) {
                 @if (item.croppedFile) {
                   <p-button

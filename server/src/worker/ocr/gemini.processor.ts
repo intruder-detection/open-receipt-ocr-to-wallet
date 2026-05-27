@@ -9,8 +9,6 @@ import { OcrFileEntity } from '@core/database/entities/ocr-file.entity';
 import { getMimeType } from '@worker/ocr/utils/mime-type.util';
 import { streamToBase64 } from '@worker/ocr/utils/stream.util';
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
-
 const OCR_PROMPT = [
   'You are an OCR engine. Transcribe every piece of text visible in the provided document into clean, well-structured GitHub-flavored Markdown.',
   'Preserve the original reading order and layout. Reproduce tables as Markdown tables. Keep totals, dates, item lists, and line-item quantities/prices intact.',
@@ -28,16 +26,17 @@ export class GeminiProcessor {
 
   async process(file: OcrFileEntity, executionId: number): Promise<string> {
     const apiKey = await this.secretProvider.getSecretOrThrow(AppSecret.GeminiApiKey);
+    const geminiModel = await this.secretProvider.getSecretOrThrow(AppSecret.GeminiModel);
     const client = new GoogleGenAI({ apiKey });
 
     const fileStream = await this.storage.getStream(file.filename);
     const base64Content = await streamToBase64(fileStream);
     const mimeType = getMimeType(extname(file.originalName).toLowerCase() as FileExtension);
 
-    this.logger.log(`Calling Gemini (${GEMINI_MODEL}) for execution #${executionId}`);
+    this.logger.log(`Calling Gemini (${geminiModel}) for execution #${executionId}`);
 
     const response = await client.models.generateContent({
-      model: GEMINI_MODEL,
+      model: geminiModel,
       contents: [
         {
           role: 'user',
@@ -48,6 +47,6 @@ export class GeminiProcessor {
 
     const markdown = response.text ?? '';
 
-    return JSON.stringify({ markdown, model: GEMINI_MODEL });
+    return JSON.stringify({ markdown, model: geminiModel });
   }
 }

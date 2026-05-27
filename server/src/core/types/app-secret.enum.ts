@@ -28,6 +28,7 @@ export enum AppSecret {
 
   // ─── Gemini ─────────────────────────────────────────────────────────────────
   GeminiApiKey = 'GEMINI_API_KEY',
+  GeminiModel = 'GEMINI_MODEL',
 
   // ─── OpenAI ──────────────────────────────────────────────────────────────────
   OpenAiApiKey = 'OPENAI_API_KEY',
@@ -74,6 +75,11 @@ export enum AppSecret {
 
   // ─── BudgetBakers ─────────────────────────────────────────────────────────────
   BudgetBakersToken = 'BUDGET_BAKERS_TOKEN',
+
+  // ─── Wallet OCR Feature Flags ─────────────────────────────────────────────────
+  UseWalletOcrProcessorProvider = 'USE_WALLET_OCR_PROCESSOR_PROVIDER',
+  DefaultWalletAccountId = 'DEFAULT_WALLET_ACCOUNT_ID',
+  DefaultWalletCategoryId = 'DEFAULT_WALLET_CATEGORY_ID',
 }
 
 /**
@@ -88,4 +94,6 @@ export const DefaultAppSecret: Partial<Record<AppSecret, string | number>> = {
   [AppSecret.RedisHost]: 'localhost',
   [AppSecret.RedisPort]: 6379,
   [AppSecret.StoragePartSize]: 5 * 1024 * 1024,
+  [AppSecret.UseWalletOcrProcessorProvider]: 'false',
+  [AppSecret.GeminiModel]: 'gemini-2.5-flash',
 };

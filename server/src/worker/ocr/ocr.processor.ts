@@ -21,6 +21,7 @@ import { GrokProcessor } from '@worker/ocr/grok.processor';
 import { TesseractProcessor } from '@worker/ocr/tesseract.processor';
 import { OpenAiProcessor } from '@worker/ocr/openai.processor';
 import { LlamaCppProcessor } from '@worker/ocr/llama-cpp.processor';
+import { GeminiToWalletProcessor } from '@worker/ocr/wallet/gemini-to-wallet.processor';
 
 @Processor(QueueName.Ocr)
 export class OcrProcessor extends WorkerHost implements OnModuleInit {
@@ -42,6 +43,7 @@ export class OcrProcessor extends WorkerHost implements OnModuleInit {
     private readonly tesseractProcessor: TesseractProcessor,
     private readonly openAiProcessor: OpenAiProcessor,
     private readonly llamaCppProcessor: LlamaCppProcessor,
+    private readonly geminiToWalletProcessor: GeminiToWalletProcessor,
   ) {
     super();
   }
@@ -126,6 +128,9 @@ export class OcrProcessor extends WorkerHost implements OnModuleInit {
           break;
         case OcrProvider.LlamaCpp:
           ocrData = await this.llamaCppProcessor.process(file, executionId);
+          break;
+        case OcrProvider.GeminiToWallet:
+          ocrData = await this.geminiToWalletProcessor.process(file, executionId);
           break;
         default:
           throw new Error(`OCR Provider "${execution.ocrProvider as string}" is not yet implemented.`);
