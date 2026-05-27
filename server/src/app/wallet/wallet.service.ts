@@ -67,7 +67,7 @@ export class WalletService {
   constructor(
     private secretProvider: SecretProvider,
     private ocrFilesDao: OcrFilesDao,
-  ) { }
+  ) {}
 
   private async getHeaders() {
     const token = (await this.secretProvider.getSecret(AppSecret.BudgetBakersToken)) || '';
@@ -176,11 +176,11 @@ export class WalletService {
             categoryId: dto.categoryId,
             amount: 0.01,
             note: note,
-            recordDate
+            recordDate,
           };
-          await this.ocrFilesDao.updateByPk(NoTxn, dto.fileId, { 
+          await this.ocrFilesDao.updateByPk(NoTxn, dto.fileId, {
             walletRecordId: result.id,
-            walletRecord: walletRecordData
+            walletRecord: walletRecordData,
           });
           this.logger.log(`Associated Wallet Record ${result.id} with OCR File ${dto.fileId}`);
         }

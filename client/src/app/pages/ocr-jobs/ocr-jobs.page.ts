@@ -219,7 +219,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
     this.walletService.createRecord(this.selectedFile!.id, this.selectedWalletAccount.id, this.selectedWalletCategory.id, note).subscribe({
       next: (res) => {
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Sent to Wallet successfully.' });
-        
+
         // Update UI state immediately
         if (res.results && res.results.length > 0 && res.results[0].id) {
           this.selectedFile!.walletRecordId = res.results[0].id;
@@ -229,7 +229,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
             categoryId: this.selectedWalletCategory!.id,
             amount: 0.01,
             note: note,
-            recordDate: new Date().toISOString()
+            recordDate: new Date().toISOString(),
           };
         }
 
