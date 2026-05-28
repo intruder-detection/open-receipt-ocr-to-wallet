@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, Output, signal, computed, ViewChild, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, signal, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OcrJobService, OCR_PROVIDER_ICONS, LOCAL_PROVIDERS } from '@services/ocr-job.service';
 
@@ -31,7 +31,7 @@ interface FileWithProvider {
   cropper?: CropperPosition;
 }
 
-import { WalletService, WalletAccount, WalletCategory } from '@services/wallet.service';
+import { WalletService } from '@services/wallet.service';
 
 @Component({
   selector: 'app-upload-dialog',
@@ -85,11 +85,6 @@ export class UploadDialogComponent implements OnInit {
   cropTarget = signal<FileWithProvider | null>(null);
 
   useWalletOcrProvider = signal(false);
-  accounts = signal<WalletAccount[]>([]);
-  categories = signal<WalletCategory[]>([]);
-  selectedAccountId = signal<string | null>(null);
-  selectedCategoryId = signal<string | null>(null);
-  walletConfigMissing = computed(() => !this.selectedAccountId() || !this.selectedCategoryId());
 
   ngOnInit() {
     this.loadWalletConfig();
@@ -98,16 +93,6 @@ export class UploadDialogComponent implements OnInit {
   private loadWalletConfig() {
     this.walletService.getConfig().subscribe((config) => {
       this.useWalletOcrProvider.set(config.useWalletOcrProcessorProvider);
-      if (config.useWalletOcrProcessorProvider) {
-        // Priority: locally stored (from settings dialog) > server env var defaults
-        const storedAccountId = this.configService.walletAccountId();
-        const storedCategoryId = this.configService.walletCategoryId();
-        this.selectedAccountId.set(storedAccountId || config.defaultAccountId || null);
-        this.selectedCategoryId.set(storedCategoryId || config.defaultCategoryId || null);
-
-        this.walletService.getAccounts().subscribe((accounts) => this.accounts.set(accounts));
-        this.walletService.getCategories().subscribe((categories) => this.categories.set(categories));
-      }
     });
   }
 
@@ -234,14 +219,8 @@ export class UploadDialogComponent implements OnInit {
     const files = items.map((i) => i.croppedFile || i.file);
     const providers = items.map((i) => i.ocrProvider as OcrProvider);
 
-    if (this.useWalletOcrProvider() && (!this.selectedAccountId() || !this.selectedCategoryId())) {
-      this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Account and Category must be selected.' });
-      this.uploading.set(false);
-      return;
-    }
-
     this.ocrJobService
-      .uploadJob(files, providers, this.jobName(), this.selectedAccountId() || undefined, this.selectedCategoryId() || undefined)
+      .uploadJob(files, providers, this.jobName())
       .subscribe({
         next: () => {
           this.uploading.set(false);

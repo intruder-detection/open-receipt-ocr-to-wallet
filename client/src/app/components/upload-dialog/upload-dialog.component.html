@@ -24,55 +24,6 @@
       />
     </div>
 
-    @if (useWalletOcrProvider()) {
-      @if (walletConfigMissing()) {
-        <div class="flex items-center gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700">
-          <i class="pi pi-exclamation-triangle text-amber-500 text-lg shrink-0"></i>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-semibold text-amber-800 dark:text-amber-200">{{ t('upload.walletConfigMissing') }}</p>
-            <p class="text-xs text-amber-600 dark:text-amber-400">{{ t('upload.walletConfigMissingDesc') }}</p>
-          </div>
-          <p-button
-            [label]="t('upload.openSettings')"
-            icon="pi pi-cog"
-            size="small"
-            severity="warn"
-            [text]="true"
-            (onClick)="configService.openSettings(); close()"
-          />
-        </div>
-      }
-      <div class="flex flex-col gap-2">
-        <label for="accountId" class="text-sm font-medium text-surface-900 dark:text-surface-100">{{ t('upload.account') }}</label>
-        <p-select
-          id="accountId"
-          [options]="accounts()"
-          [ngModel]="selectedAccountId()"
-          (ngModelChange)="selectedAccountId.set($event)"
-          optionLabel="name"
-          optionValue="id"
-          [placeholder]="t('upload.selectAccount')"
-          class="w-full"
-          appendTo="body"
-        ></p-select>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <label for="categoryId" class="text-sm font-medium text-surface-900 dark:text-surface-100">{{ t('upload.category') }}</label>
-        <p-select
-          id="categoryId"
-          [options]="categories()"
-          [ngModel]="selectedCategoryId()"
-          (ngModelChange)="selectedCategoryId.set($event)"
-          optionLabel="name"
-          optionValue="id"
-          [placeholder]="t('upload.selectCategory')"
-          class="w-full"
-          appendTo="body"
-        ></p-select>
-      </div>
-    }
-
     <p-fileUpload
       #fileUpload
       name="files"

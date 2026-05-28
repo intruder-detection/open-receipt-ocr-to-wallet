@@ -16,4 +16,12 @@ export class CreateWalletRecordDto {
   @IsString()
   @IsNotEmpty()
   note: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  amount: number;
+
+  @IsString()
+  @IsNotEmpty()
+  recordDate: string;
 }

@@ -67,16 +67,10 @@ export class OcrJobService {
       .subscribe();
   }
 
-  uploadJob(files: File[], providers: OcrProvider[], jobName?: string, accountId?: string, categoryId?: string) {
+  uploadJob(files: File[], providers: OcrProvider[], jobName?: string) {
     const formData = new FormData();
     if (jobName) {
       formData.append('jobName', jobName);
-    }
-    if (accountId) {
-      formData.append('accountId', accountId);
-    }
-    if (categoryId) {
-      formData.append('categoryId', categoryId);
     }
     files.forEach((file, index) => {
       formData.append('files', file);

@@ -545,6 +545,31 @@
     [resizable]="false"
   >
     <div class="flex flex-col gap-4 py-4">
+      @if (selectedExecution?.ocrProvider === OcrProvider.GeminiToWallet) {
+      <div class="flex gap-3">
+        <div class="flex flex-col gap-2 flex-1">
+          <label for="walletAmount" class="font-semibold text-sm">Amount</label>
+          <input
+            id="walletAmount"
+            type="number"
+            pInputText
+            [(ngModel)]="walletAmount"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            class="w-full"
+          />
+        </div>
+        <div class="flex flex-col gap-2 flex-1">
+          <label for="walletDate" class="font-semibold text-sm">Date</label>
+          <input id="walletDate" type="datetime-local" pInputText [(ngModel)]="walletDate" class="w-full" />
+        </div>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="walletNote" class="font-semibold text-sm">Note</label>
+        <textarea id="walletNote" pInputText [(ngModel)]="walletNote" rows="3" class="w-full resize-none"></textarea>
+      </div>
+      }
       <div class="flex flex-col gap-2">
         <label for="accountSelect" class="font-semibold text-sm">Account</label>
         <p-select

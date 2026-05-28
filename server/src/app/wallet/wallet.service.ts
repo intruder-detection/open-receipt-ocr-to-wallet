@@ -61,7 +61,6 @@ export interface WalletConfigResponse {
 
 export interface WalletRecordPayload {
   extraction_scratchpad: string;
-  accountId: string;
   amount: {
     value: number;
   };
@@ -142,24 +141,36 @@ export class WalletService {
     }
   }
 
+  async getRecentRecords(limit = 20): Promise<{ categoryId: string }[]> {
+    try {
+      const headers = await this.getHeaders();
+      const response = await fetch(`${this.baseUrl}/v1/api/records?limit=${limit}`, { headers });
+      if (!response.ok) {
+        this.logger.warn(`Failed to fetch recent records: ${response.statusText}`);
+        return [];
+      }
+      const data = (await response.json()) as { records?: { categoryId: string }[] };
+      return data.records || [];
+    } catch (error) {
+      this.logger.warn('Error fetching recent records from BudgetBakers, skipping category hints', error);
+      return [];
+    }
+  }
+
   async createRecord(dto: CreateWalletRecordDto): Promise<CreateRecordsResponse> {
     try {
-      // The current Date in the format presented in the example
-      // e.g. "2025-03-15T14:30:00Z"
-      const recordDate = new Date().toISOString().split('.')[0] + 'Z';
-
       const note = dto.note && dto.note.length > 255 ? dto.note.substring(0, 252) + '...' : dto.note;
 
       const payload = [
         {
           accountId: dto.accountId,
           amount: {
-            value: 0.01,
+            value: dto.amount,
           },
           categoryId: dto.categoryId,
           note: note,
           paymentType: 'cash',
-          recordDate,
+          recordDate: dto.recordDate,
         },
       ];
 
@@ -190,9 +201,9 @@ export class WalletService {
             id: result.id,
             accountId: dto.accountId,
             categoryId: dto.categoryId,
-            amount: 0.01,
+            amount: dto.amount,
             note: note,
-            recordDate,
+            recordDate: dto.recordDate,
           };
           await this.ocrFilesDao.updateByPk(NoTxn, dto.fileId, {
             walletRecordId: result.id,
@@ -206,53 +217,6 @@ export class WalletService {
     } catch (error) {
       this.logger.error('Error creating record in BudgetBakers', error);
       throw new HttpException(error instanceof Error ? error.message : 'Failed to create record', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  async createRecordFromPayload(payload: WalletRecordPayload[], fileId: number): Promise<CreateRecordsResponse> {
-    try {
-      const headers = await this.getHeaders();
-      const response = await fetch(`${this.baseUrl}/v1/api/records`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Failed to create record: ${response.statusText} - ${text}`);
-      }
-
-      const responseBody = (await response.json()) as CreateRecordsResponse;
-
-      if (responseBody.results && responseBody.results.length > 0) {
-        const result = responseBody.results[0];
-        if (!result.success) {
-          throw new Error(result.error || 'Unknown error occurred while creating record');
-        }
-
-        if (result.id && payload.length > 0) {
-          const firstRecord = payload[0];
-          const walletRecordData = {
-            id: result.id,
-            accountId: firstRecord.accountId,
-            categoryId: firstRecord.categoryId,
-            amount: firstRecord.amount.value,
-            note: firstRecord.note,
-            recordDate: firstRecord.recordDate,
-          };
-          await this.ocrFilesDao.updateByPk(NoTxn, fileId, {
-            walletRecordId: result.id,
-            walletRecord: walletRecordData,
-          });
-          this.logger.log(`Associated Wallet Record ${result.id} with OCR File ${fileId} using direct payload`);
-        }
-      }
-
-      return responseBody;
-    } catch (error) {
-      this.logger.error('Error creating record in BudgetBakers from payload', error);
-      throw new HttpException(error instanceof Error ? error.message : 'Failed to create record from payload', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

@@ -31,6 +31,15 @@ export interface WalletPaginatedResponse<T> {
   data?: T[];
 }
 
+export interface WalletRecordPayload {
+  extraction_scratchpad: string;
+  amount: { value: number };
+  categoryId: string;
+  note: string;
+  paymentType: string;
+  recordDate: string;
+}
+
 export interface WalletRecordResponse {
   summary: {
     total: number;
@@ -72,12 +81,14 @@ export class WalletService {
     );
   }
 
-  createRecord(fileId: number, accountId: string, categoryId: string, note: string): Observable<WalletRecordResponse> {
+  createRecord(fileId: number, accountId: string, categoryId: string, note: string, amount: number, recordDate: string): Observable<WalletRecordResponse> {
     return this.http.post<WalletRecordResponse>(`${this.apiUrl}/records`, {
       fileId,
       accountId,
       categoryId,
       note,
+      amount,
+      recordDate,
     });
   }
 
