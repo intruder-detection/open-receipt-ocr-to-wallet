@@ -21,7 +21,7 @@ Required fields in the JSON object:
 - "extraction_scratchpad": A brief string where you explicitly state the raw text on the receipt that indicates the date and the total (e.g., "Found date in 'MOV:070924', total is 4.39").
 - "amount": a number representing the total amount paid on the receipt.
 - "recordDate": a string representing the date of the receipt in ISO 8601 format (e.g. "2024-09-07T12:00:00Z"). Look carefully for standard date formats (DD/MM/YYYY) as well as implicit dates hidden in Portuguese transaction codes (like "MOV:DDMMYY" at the bottom of the receipt). If time is unknown, default to 12:00:00Z.
-- "note": a string containing a brief summary or transcription of the receipt items, STRICTLY capped at 255 characters. Add new line for formatting.
+- "note": a string listing each purchased item on its own line using the literal newline character (\n). Format each line as "Nx item name (price)" where N is the quantity. STRICTLY capped at 255 characters total. Never join items with commas — always use a newline between items.
 - "counterParty": the name of the merchant, store, or business on the receipt (e.g. "Continente", "McDonald's"). Use the business name as printed. If not identifiable, use an empty string.
 - "categoryId": the id of the best-matching category from the list below, based on the type of purchase on this receipt. If none fits well, use the id of the most generic one available.
 
@@ -33,7 +33,7 @@ Example Output format:
   "extraction_scratchpad": "Date found in string 'MOV:070924' meaning Sept 7, 2024. Total pago is 4.39.",
   "amount": 12.34,
   "recordDate": "2025-03-15T12:00:00Z",
-  "note": "Lunch at restaurant: 1x Burger, 1x Fries",
+  "note": "1x Burger (8.50)\n1x Fries (3.84)",
   "counterParty": "Downtown Bistro",
   "categoryId": "5c5c1f44-0050-8000-8000-000000000000"
 }
