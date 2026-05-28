@@ -65,6 +65,7 @@ export interface WalletRecordPayload {
     value: number;
   };
   categoryId: string;
+  counterParty?: string;
   note: string;
   paymentType: string;
   recordDate: string;
@@ -179,6 +180,7 @@ export class WalletService {
             value: dto.amount,
           },
           categoryId: dto.categoryId,
+          ...(dto.counterParty ? { counterParty: dto.counterParty } : {}),
           note: note,
           paymentType: 'cash',
           recordDate: dto.recordDate,

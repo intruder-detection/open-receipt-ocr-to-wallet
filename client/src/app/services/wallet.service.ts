@@ -35,6 +35,7 @@ export interface WalletRecordPayload {
   extraction_scratchpad: string;
   amount: { value: number };
   categoryId: string;
+  counterParty?: string;
   note: string;
   paymentType: string;
   recordDate: string;
@@ -88,6 +89,7 @@ export class WalletService {
     note: string,
     amount: number,
     recordDate: string,
+    counterParty?: string,
   ): Observable<WalletRecordResponse> {
     return this.http.post<WalletRecordResponse>(`${this.apiUrl}/records`, {
       fileId,
@@ -96,6 +98,7 @@ export class WalletService {
       note,
       amount,
       recordDate,
+      ...(counterParty ? { counterParty } : {}),
     });
   }
 

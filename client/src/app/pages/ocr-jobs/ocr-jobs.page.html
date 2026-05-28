@@ -540,7 +540,7 @@
     [(visible)]="showWalletDialog"
     [header]="walletDialogReadOnly ? 'Wallet Record' : 'Send to Wallet by BudgetBakers'"
     [modal]="true"
-    [style]="{ width: '450px' }"
+    [style]="{ width: 'min(650px, 95vw)' }"
     [draggable]="false"
     [resizable]="false"
   >
@@ -553,8 +553,7 @@
           <span class="text-xs font-mono text-surface-700 dark:text-surface-200 truncate">{{ walletRecordViewId }}</span>
         </div>
       </div>
-      }
-      @if (selectedExecution?.ocrProvider === OcrProvider.GeminiToWallet || walletDialogReadOnly) {
+      } @if (selectedExecution?.ocrProvider === OcrProvider.GeminiToWallet || walletDialogReadOnly) {
       <div class="flex gap-3">
         <div class="flex flex-col gap-2 flex-1">
           <label for="walletAmount" class="font-semibold text-sm">Amount</label>
@@ -577,7 +576,26 @@
       </div>
       <div class="flex flex-col gap-2">
         <label for="walletNote" class="font-semibold text-sm">Note</label>
-        <textarea id="walletNote" pInputText [(ngModel)]="walletNote" rows="3" class="w-full resize-none" [disabled]="walletDialogReadOnly"></textarea>
+        <textarea
+          id="walletNote"
+          pInputText
+          [(ngModel)]="walletNote"
+          rows="3"
+          class="w-full resize-none"
+          [disabled]="walletDialogReadOnly"
+        ></textarea>
+      </div>
+      <div class="flex flex-col gap-2">
+        <label for="walletCounterParty" class="font-semibold text-sm">Merchant</label>
+        <input
+          id="walletCounterParty"
+          type="text"
+          pInputText
+          [(ngModel)]="walletCounterParty"
+          placeholder="e.g. Continente"
+          class="w-full"
+          [disabled]="walletDialogReadOnly"
+        />
       </div>
       }
       <div class="flex flex-col gap-2">

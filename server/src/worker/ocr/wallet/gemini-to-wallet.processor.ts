@@ -22,6 +22,7 @@ Required fields in the JSON object:
 - "amount": a number representing the total amount paid on the receipt.
 - "recordDate": a string representing the date of the receipt in ISO 8601 format (e.g. "2024-09-07T12:00:00Z"). Look carefully for standard date formats (DD/MM/YYYY) as well as implicit dates hidden in Portuguese transaction codes (like "MOV:DDMMYY" at the bottom of the receipt). If time is unknown, default to 12:00:00Z.
 - "note": a string containing a brief summary or transcription of the receipt items, STRICTLY capped at 255 characters. Add new line for formatting.
+- "counterParty": the name of the merchant, store, or business on the receipt (e.g. "Continente", "McDonald's"). Use the business name as printed. If not identifiable, use an empty string.
 - "categoryId": the id of the best-matching category from the list below, based on the type of purchase on this receipt. If none fits well, use the id of the most generic one available.
 
 Available categories (choose one id from this list):
@@ -33,6 +34,7 @@ Example Output format:
   "amount": 12.34,
   "recordDate": "2025-03-15T12:00:00Z",
   "note": "Lunch at restaurant: 1x Burger, 1x Fries",
+  "counterParty": "Downtown Bistro",
   "categoryId": "5c5c1f44-0050-8000-8000-000000000000"
 }
 `;
@@ -104,6 +106,7 @@ export class GeminiToWalletProcessor {
       recordDate: string;
       note: string;
       extraction_scratchpad: string;
+      counterParty: string;
       categoryId: string;
     };
     try {
@@ -132,6 +135,7 @@ export class GeminiToWalletProcessor {
     }
     const note = extractedData.note ? extractedData.note.substring(0, 255) : '';
     const categoryId = extractedData.categoryId || '';
+    const counterParty = extractedData.counterParty || '';
 
     const payload: WalletRecordPayload[] = [
       {
@@ -140,13 +144,14 @@ export class GeminiToWalletProcessor {
           value: amountValue,
         },
         categoryId,
+        counterParty,
         note,
         paymentType: 'cash',
         recordDate,
       },
     ];
 
-    const suggestedCategoryName = recentCategories.find(c => c.id === categoryId)?.name || 'Unknown';
+    const suggestedCategoryName = recentCategories.find((c) => c.id === categoryId)?.name || 'Unknown';
 
     this.logger.log(`OCR complete for file #${file.id} (execution #${executionId}), category suggested: ${suggestedCategoryName} (${categoryId})`);
 

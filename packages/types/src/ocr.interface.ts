@@ -25,6 +25,7 @@ export interface OcrFile {
     accountId: string;
     categoryId: string;
     amount: number;
+    counterParty?: string;
     note: string;
     recordDate: string;
   } | null;

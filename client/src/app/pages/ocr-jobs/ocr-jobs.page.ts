@@ -182,6 +182,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
   walletAmount: number | null = null;
   walletDate: string | null = null;
   walletNote: string | null = null;
+  walletCounterParty: string | null = null;
 
   private buildCategoryGroups(categories: WalletCategory[]) {
     const groups = new Map<string, WalletCategory[]>();
@@ -195,10 +196,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
       .sort((a, b) => a.label.localeCompare(b.label));
   }
 
-  private loadWalletAccountsAndCategories(
-    onAccounts: (accounts: WalletAccount[]) => void,
-    onCategories: (categories: WalletCategory[]) => void,
-  ) {
+  private loadWalletAccountsAndCategories(onAccounts: (accounts: WalletAccount[]) => void, onCategories: (categories: WalletCategory[]) => void) {
     this.walletService.getAccounts().subscribe({
       next: onAccounts,
       error: (err) => console.error('Failed to fetch accounts', err),
@@ -220,6 +218,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
     this.walletAmount = null;
     this.walletDate = null;
     this.walletNote = null;
+    this.walletCounterParty = null;
     this.selectedWalletAccount = null;
     this.selectedWalletCategory = null;
 
@@ -240,6 +239,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
               this.walletAmount = record.amount.value;
               this.walletDate = record.recordDate ? record.recordDate.substring(0, 16) : null;
               this.walletNote = record.note;
+              this.walletCounterParty = record.counterParty ?? null;
               if (record.categoryId) {
                 this.selectedWalletCategory = categories.find((c) => c.id === record.categoryId) ?? null;
               }
@@ -261,6 +261,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
     this.walletAmount = Math.abs(record.amount);
     this.walletDate = record.recordDate ? record.recordDate.substring(0, 16) : null;
     this.walletNote = record.note;
+    this.walletCounterParty = record.counterParty ?? null;
     this.selectedWalletAccount = null;
     this.selectedWalletCategory = null;
     this.showWalletDialog = true;
@@ -287,6 +288,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
     let note: string;
     let amount: number;
     let recordDate: string;
+    let counterParty: string | undefined;
 
     if (isGeminiToWallet) {
       if (this.walletAmount === null || !this.walletDate || !this.walletNote) {
@@ -296,6 +298,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
       note = this.walletNote;
       amount = -Math.abs(this.walletAmount);
       recordDate = this.walletDate.length === 16 ? this.walletDate + ':00Z' : this.walletDate;
+      counterParty = this.walletCounterParty || undefined;
     } else {
       if (!this.selectedExecution?.ocrData) {
         this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'No OCR data available.' });
@@ -310,7 +313,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
 
     this.sendingToWallet = true;
     this.walletService
-      .createRecord(this.selectedFile!.id, this.selectedWalletAccount.id, this.selectedWalletCategory.id, note, amount, recordDate)
+      .createRecord(this.selectedFile!.id, this.selectedWalletAccount.id, this.selectedWalletCategory.id, note, amount, recordDate, counterParty)
       .subscribe({
         next: (res) => {
           this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Sent to Wallet successfully.' });
@@ -322,6 +325,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
               accountId: this.selectedWalletAccount!.id,
               categoryId: this.selectedWalletCategory!.id,
               amount,
+              counterParty: counterParty || undefined,
               note,
               recordDate,
             };
@@ -334,6 +338,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
           this.walletAmount = null;
           this.walletDate = null;
           this.walletNote = null;
+          this.walletCounterParty = null;
         },
         error: (err) => {
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to send to Wallet.' });

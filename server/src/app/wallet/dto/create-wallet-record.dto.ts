@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateWalletRecordDto {
   @IsNumber()
@@ -24,4 +24,8 @@ export class CreateWalletRecordDto {
   @IsString()
   @IsNotEmpty()
   recordDate: string;
+
+  @IsOptional()
+  @IsString()
+  counterParty?: string;
 }
