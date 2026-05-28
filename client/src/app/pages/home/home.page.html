@@ -18,23 +18,23 @@
   <!-- Stats Grid -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
     @for (stat of stats; track stat.label) {
-      <div class="group">
-        <p-card styleClass="border-none shadow-sm hover:shadow-xl transition-all duration-300 rounded-3xl overflow-hidden group-hover:-translate-y-1">
-          <div class="flex items-center gap-5">
-            <div
-              class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl transition-transform duration-500 group-hover:rotate-12 {{
+    <div class="group">
+      <p-card styleClass="border-none shadow-sm hover:shadow-xl transition-all duration-300 rounded-3xl overflow-hidden group-hover:-translate-y-1">
+        <div class="flex items-center gap-5">
+          <div
+            class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl transition-transform duration-500 group-hover:rotate-12 {{
                 stat.iconBg
               }} {{ stat.iconColor }}"
-            >
-              <i [class]="stat.icon"></i>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-[10px] font-black uppercase text-surface-400 tracking-widest">{{ t(stat.label) }}</span>
-              <span class="text-3xl font-black text-surface-900 dark:text-surface-0">{{ stat.value }}</span>
-            </div>
+          >
+            <i [class]="stat.icon"></i>
           </div>
-        </p-card>
-      </div>
+          <div class="flex flex-col">
+            <span class="text-[10px] font-black uppercase text-surface-400 tracking-widest">{{ t(stat.label) }}</span>
+            <span class="text-3xl font-black text-surface-900 dark:text-surface-0">{{ stat.value }}</span>
+          </div>
+        </div>
+      </p-card>
+    </div>
     }
   </div>
 
@@ -46,46 +46,46 @@
     </div>
 
     @if (ocrJobService.loading() && ocrJobService.jobs().length === 0) {
-      <div class="flex flex-col items-center justify-center py-20 gap-4">
-        <p-progressSpinner styleClass="w-12 h-12" strokeWidth="4" />
-        <p class="text-surface-400 font-bold uppercase tracking-widest text-[10px]">{{ t('common.loading') }}</p>
-      </div>
+    <div class="flex flex-col items-center justify-center py-20 gap-4">
+      <p-progressSpinner styleClass="w-12 h-12" strokeWidth="4" />
+      <p class="text-surface-400 font-bold uppercase tracking-widest text-[10px]">{{ t('common.loading') }}</p>
+    </div>
     } @else if (ocrJobService.jobs().length > 0) {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @for (job of recentJobs; track job.id) {
-          <p-card
-            styleClass="border-none shadow-sm hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-all rounded-[2rem] cursor-pointer"
-            routerLink="/ocr-jobs"
-          >
-            <div class="flex items-center justify-between gap-4">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center">
-                  <i class="pi pi-receipt text-xl text-primary-500"></i>
-                </div>
-                <div class="flex flex-col min-w-0">
-                  <p class="font-bold text-surface-900 dark:text-surface-100 truncate">Job #{{ job.id }}</p>
-                  <span class="text-[10px] font-bold text-surface-400 uppercase tracking-widest">{{ job.createdAt | date: 'MMM d, HH:mm' }}</span>
-                </div>
-              </div>
-              <p-tag
-                [value]="t('ocrJobs.status.' + job.status)"
-                [severity]="getStatusSeverity(job.status)"
-                styleClass="text-[9px] px-2 py-1 rounded-full uppercase font-black"
-              />
-            </div>
-          </p-card>
-        }
-      </div>
-    } @else {
-      <div
-        class="bg-surface-50 dark:bg-surface-900/40 rounded-[2.5rem] border-2 border-dashed border-surface-200 dark:border-surface-800 p-16 text-center animate-in fade-in zoom-in duration-500"
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      @for (job of recentJobs; track job.id) {
+      <p-card
+        styleClass="border-none shadow-sm hover:bg-surface-50 dark:hover:bg-surface-800/30 transition-all rounded-[2rem] cursor-pointer"
+        routerLink="/ocr-jobs"
       >
-        <div class="w-20 h-20 bg-surface-100 dark:bg-surface-800 rounded-full flex items-center justify-center mx-auto mb-6">
-          <i class="pi pi-inbox text-4xl text-surface-300 dark:text-surface-600"></i>
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center">
+              <i class="pi pi-receipt text-xl text-primary-500"></i>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <p class="font-bold text-surface-900 dark:text-surface-100 truncate">Job #{{ job.id }}</p>
+              <span class="text-[10px] font-bold text-surface-400 uppercase tracking-widest">{{ job.createdAt | date: 'MMM d, HH:mm' }}</span>
+            </div>
+          </div>
+          <p-tag
+            [value]="t('ocrJobs.status.' + job.status)"
+            [severity]="getStatusSeverity(job.status)"
+            styleClass="text-[9px] px-2 py-1 rounded-full uppercase font-black"
+          />
         </div>
-        <p class="text-surface-500 dark:text-surface-400 font-medium mb-8">{{ t('ocrJobs.noJobs') }}</p>
-        <p-button [label]="t('ocrJobs.addJob')" icon="pi pi-plus" (onClick)="showUpload = true" severity="secondary" [outlined]="true" />
+      </p-card>
+      }
+    </div>
+    } @else {
+    <div
+      class="bg-surface-50 dark:bg-surface-900/40 rounded-[2.5rem] border-2 border-dashed border-surface-200 dark:border-surface-800 p-16 text-center animate-in fade-in zoom-in duration-500"
+    >
+      <div class="w-20 h-20 bg-surface-100 dark:bg-surface-800 rounded-full flex items-center justify-center mx-auto mb-6">
+        <i class="pi pi-inbox text-4xl text-surface-300 dark:text-surface-600"></i>
       </div>
+      <p class="text-surface-500 dark:text-surface-400 font-medium mb-8">{{ t('ocrJobs.noJobs') }}</p>
+      <p-button [label]="t('ocrJobs.addJob')" icon="pi pi-plus" (onClick)="showUpload = true" severity="secondary" [outlined]="true" />
+    </div>
     }
   </div>
 

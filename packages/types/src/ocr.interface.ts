@@ -19,6 +19,16 @@ export interface OcrFile {
   originalName: string;
   status: OcrFileStatus;
   executions?: OcrExecution[];
+  walletRecordId?: string | null;
+  walletRecord?: {
+    id: string;
+    accountId: string;
+    categoryId: string;
+    amount: number;
+    counterParty?: string;
+    note: string;
+    recordDate: string;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }

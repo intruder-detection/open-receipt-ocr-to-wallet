@@ -9,4 +9,5 @@ export enum OcrProvider {
   Tesseract = 'tesseract',
   OpenAi = 'openAi',
   LlamaCpp = 'llamaCpp',
+  GeminiToWallet = 'geminiToWallet',
 }

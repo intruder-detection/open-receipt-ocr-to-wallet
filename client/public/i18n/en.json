@@ -41,7 +41,14 @@
     "cropRotateRight": "Rotate Right",
     "cropZoomIn": "Zoom In",
     "cropZoomOut": "Zoom Out",
-    "cropFlipH": "Flip Horizontal"
+    "cropFlipH": "Flip Horizontal",
+    "account": "Wallet Account",
+    "selectAccount": "Select account",
+    "category": "Wallet Category",
+    "selectCategory": "Select category",
+    "walletConfigMissing": "Wallet account or category not configured",
+    "walletConfigMissingDesc": "Please set a default account and category in settings before uploading.",
+    "openSettings": "Open Settings"
   },
   "ocrJobs": {
     "title": "OCR Jobs",
@@ -137,6 +144,7 @@
       "tesseract": "Tesseract.js",
       "openAi": "OpenAI",
       "llamaCpp": "llama.cpp",
+      "geminiToWallet": "Gemini To Wallet",
       "none": "None (Manual Selection)"
     },
     "outputs": {
@@ -159,6 +167,16 @@
       "pt": "Portuguese",
       "fr": "French",
       "de": "German"
+    },
+    "singleSelection": "single selection",
+    "wallet": {
+      "title": "Wallet Integration",
+      "defaultAccount": "Default Account",
+      "selectAccount": "Select default account",
+      "defaultCategory": "Default Category",
+      "selectCategory": "Select default category",
+      "saveSuccess": "Wallet settings saved",
+      "saveFailed": "Failed to save wallet settings"
     }
   },
   "ocr": {

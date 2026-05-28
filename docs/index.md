@@ -10,6 +10,7 @@ A powerful, flexible, and extensible OCR (Optical Character Recognition) platfor
 
 ## ✨ Key Features
 
+- **Wallet Integration**: Upload a receipt and have it land in Wallet by BudgetBakers automatically — amount, date, category, and merchant all extracted by AI
 - **Multi-Provider Support**: Choose from 10+ OCR engines (local and cloud-based)
 - **No Single Vendor Lock-in**: Seamlessly switch between providers based on your needs
 - **Local Processing**: Run OCR locally using PaddleOCR or Tesseract.js without API calls
@@ -87,6 +88,7 @@ The application is built with:
 - **llama.cpp** - Advanced vision models (LLaVA, Qwen-VL)
 
 ### Cloud (API Keys Required)
+- **Gemini → Wallet** ⭐ — end-to-end receipt-to-expense pipeline with Wallet by BudgetBakers
 - TabScanner, Google Gemini, OpenAI, Mistral, xAI Grok, AWS Textract, PaddleOCR API
 
 See [Configuration](./configuration.md) for details on setting up each provider.

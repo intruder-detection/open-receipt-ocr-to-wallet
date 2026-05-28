@@ -17,6 +17,7 @@ export const OCR_PROVIDER_ICONS: Record<OcrProvider, string> = {
   [OcrProvider.Tesseract]: 'pi pi-eye',
   [OcrProvider.OpenAi]: 'pi pi-openai',
   [OcrProvider.LlamaCpp]: 'pi pi-microchip-ai',
+  [OcrProvider.GeminiToWallet]: 'pi pi-wallet',
 };
 
 @Injectable({

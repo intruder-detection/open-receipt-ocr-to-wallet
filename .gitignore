@@ -148,3 +148,5 @@ vite.config.ts.timestamp-*
 server/uploads
 
 *.traineddata
+
+server/data

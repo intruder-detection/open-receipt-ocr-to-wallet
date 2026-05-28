@@ -7,6 +7,7 @@ import { DatabaseModule } from '@core/database/database.module';
 import { SecretsModule } from '@core/secrets/secrets.module';
 import { StorageModule } from '@core/storage/storage.module';
 import { OcrJobsModule } from '@app/ocr-jobs/ocr-jobs.module';
+import { WalletModule } from '@app/wallet/wallet.module';
 import { SecretProvider } from '@core/secrets/secret-provider.interface';
 import { AppSecret } from '@core/types/app-secret.enum';
 import { LoggingInterceptor } from '@core/interceptors/logging.interceptor';
@@ -28,6 +29,7 @@ const moduleImports: NestModuleImport[] = [
     }),
   }),
   OcrJobsModule,
+  WalletModule,
 ];
 
 if (process.env[AppSecret.NodeEnv] === 'production') {

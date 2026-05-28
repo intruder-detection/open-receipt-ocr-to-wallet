@@ -97,9 +97,13 @@ export class OcrJobsService {
       const txn = WithTxn(em);
 
       const jobName = parseResult.fields['jobName'];
+      const accountId = parseResult.fields['accountId'] as string | undefined;
+      const categoryId = parseResult.fields['categoryId'] as string | undefined;
       const job = await this.ocrJobsDao.create(txn, {
         status: OcrJobStatus.Processing,
         name: jobName,
+        accountId,
+        categoryId,
       });
 
       const executions: { id: number; fileId: number }[] = [];

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, Output, signal, ViewChild } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, signal, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OcrJobService, OCR_PROVIDER_ICONS, LOCAL_PROVIDERS } from '@services/ocr-job.service';
 
@@ -31,6 +31,8 @@ interface FileWithProvider {
   cropper?: CropperPosition;
 }
 
+import { WalletService } from '@services/wallet.service';
+
 @Component({
   selector: 'app-upload-dialog',
   standalone: true,
@@ -51,18 +53,20 @@ interface FileWithProvider {
   ],
   templateUrl: './upload-dialog.component.html',
 })
-export class UploadDialogComponent {
+export class UploadDialogComponent implements OnInit {
   @ViewChild('fileUpload') fileUpload!: FileUpload;
 
   private ocrJobService = inject(OcrJobService);
-  private configService = inject(ConfigService);
+  public configService = inject(ConfigService);
   private translocoService = inject(TranslocoService);
   private messageService = inject(MessageService);
+  private walletService = inject(WalletService);
 
   @Input() set visible(val: boolean) {
     this._visible = val;
     if (val) {
       this.reset();
+      this.loadWalletConfig();
     }
   }
   get visible() {
@@ -79,6 +83,18 @@ export class UploadDialogComponent {
   message = signal<string | null>(null);
   isError = signal(false);
   cropTarget = signal<FileWithProvider | null>(null);
+
+  useWalletOcrProvider = signal(false);
+
+  ngOnInit() {
+    this.loadWalletConfig();
+  }
+
+  private loadWalletConfig() {
+    this.walletService.getConfig().subscribe((config) => {
+      this.useWalletOcrProvider.set(config.useWalletOcrProcessorProvider);
+    });
+  }
 
   isImage(file: File): boolean {
     return file.type.startsWith('image/');
@@ -152,7 +168,7 @@ export class UploadDialogComponent {
       if (!updated.some((item) => item.file.name === f.name && item.file.size === f.size)) {
         updated.push({
           file: f,
-          ocrProvider: defaultProvider ?? undefined,
+          ocrProvider: this.useWalletOcrProvider() ? OcrProvider.GeminiToWallet : (defaultProvider ?? undefined),
         });
       }
     });

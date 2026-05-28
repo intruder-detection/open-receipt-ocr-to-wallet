@@ -36,4 +36,7 @@ export class OcrExecutionEntity extends WithModificationDates {
 
   @Column({ name: 'error_message', type: 'text', nullable: true })
   errorMessage?: string | null;
+
+  @Column({ name: 'extra_data', type: 'simple-json', nullable: true })
+  extraData?: Record<string, string> | null;
 }

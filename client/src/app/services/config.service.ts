@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { Subject } from 'rxjs';
 import { OcrProvider } from '@open-receipt-ocr/types';
 
 @Injectable({
@@ -10,6 +11,11 @@ export class ConfigService {
   language = signal<string>('en');
   theme = signal<'light' | 'dark'>('light');
   sidebarCollapsed = signal<boolean>(false);
+  readonly openSettings$ = new Subject<void>();
+
+  openSettings() {
+    this.openSettings$.next();
+  }
 
   private storageKey = 'open-receipt-ocr-config';
 

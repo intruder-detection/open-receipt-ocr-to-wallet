@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
     "prebuild": "rm -rf dist",
-    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" --experimental-cli",
     "start": "nest start -e \"node -r dotenv/config\"",
     "start:dev": "nest start --watch -e \"node -r dotenv/config\"",
     "dev": "nest start --watch -e \"node -r dotenv/config\"",

@@ -127,6 +127,53 @@ PADDLE_OCR_ENDPOINT=your_endpoint_url
 PADDLE_OCR_API_KEY=your_api_key
 ```
 
+## Wallet by BudgetBakers Integration
+
+The **Gemini → Wallet** provider automates the full receipt-to-expense pipeline: Gemini reads the receipt, suggests a category based on your recent transactions, and sends the record directly to your Wallet account. Users review and confirm the extracted data in a pre-filled dialog before anything is saved.
+
+### Required Variables
+
+```env
+# Enable the Gemini → Wallet OCR provider in the upload dialog
+USE_WALLET_OCR_PROCESSOR_PROVIDER=true
+
+# BudgetBakers API bearer token
+BUDGET_BAKERS_TOKEN=your_budgetbakers_token
+
+# Gemini (also used by the standard Gemini provider)
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.5-flash   # optional, this is the default
+```
+
+> [!TIP]
+> Your BudgetBakers token is available at **Wallet web app → Settings → API**.
+> Available accounts and categories can be browsed via `GET /wallet/accounts` and `GET /wallet/categories` (see [API Reference](./api.md)).
+
+### How the Flow Works
+
+1. **Upload** — user uploads a receipt and selects the *Gemini → Wallet* provider. No account or category selection is needed at this stage.
+2. **AI Extraction** — the server calls the BudgetBakers API for the last 20 records to derive your most-used categories, then passes them to Gemini with the receipt image. Gemini returns structured JSON:
+   - `amount` — total amount paid
+   - `recordDate` — ISO 8601 date from the receipt
+   - `note` — line-item summary (one item per line, max 255 chars)
+   - `counterParty` — merchant/store name
+   - `categoryId` — best-matching category from your recent history
+3. **Review** — once OCR is complete, the user clicks *Send To Wallet* and sees a pre-filled form showing all extracted fields plus account/category dropdowns.
+4. **Confirm** — clicking *Send* negates the amount (expenses are negative) and calls `POST /wallet/records` to create the record in BudgetBakers.
+5. **View / Edit** — the button changes to *Saved in Wallet*. Clicking it reopens the dialog in read-only mode showing the Wallet Record ID. An **Edit** button allows updating category, amount, date, note, or merchant via `PATCH /wallet/records`.
+
+### Caching
+
+To avoid hammering the BudgetBakers API on every upload, the server caches responses:
+
+| Resource | TTL |
+|----------|-----|
+| Accounts | 1 hour |
+| Categories | 1 hour |
+| Recent records (for category hints) | 15 minutes |
+
+---
+
 ## Storage Providers
 
 Configure where uploaded files are stored.
@@ -254,6 +301,7 @@ LLAMA_CPP_BASE_URL=http://localhost:8080/v1
 
 # OCR Providers - Cloud (uncomment to enable)
 # GEMINI_API_KEY=
+# GEMINI_MODEL=gemini-2.5-flash
 # OPENAI_API_KEY=
 # MISTRAL_API_KEY=
 # XAI_API_KEY=
@@ -261,6 +309,10 @@ LLAMA_CPP_BASE_URL=http://localhost:8080/v1
 # AWS_ACCESS_KEY_ID=
 # AWS_SECRET_ACCESS_KEY=
 # AWS_REGION=
+
+# Wallet by BudgetBakers integration
+# USE_WALLET_OCR_PROCESSOR_PROVIDER=false
+# BUDGET_BAKERS_TOKEN=
 
 # Storage
 STORAGE_PROVIDER=local

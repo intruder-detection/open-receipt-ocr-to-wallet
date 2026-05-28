@@ -98,6 +98,18 @@ You should see the Open Receipt OCR interface. Try uploading a receipt image!
 3. **View Results**: Once processing completes, view the extracted text
 4. **Export**: Download or copy the OCR results
 
+### Wallet Integration Workflow (Gemini → Wallet)
+
+If you have configured `USE_WALLET_OCR_PROCESSOR_PROVIDER=true` and `BUDGET_BAKERS_TOKEN`, a dedicated **Gemini → Wallet** provider becomes available:
+
+1. **Upload**: Select file(s) — no account or category selection needed
+2. **AI Extraction**: Gemini reads the receipt and extracts amount, date, line items, and merchant; it suggests a category based on your 20 most-recent Wallet transactions
+3. **Review**: Click **Send To Wallet** to open a pre-filled form — verify or adjust any field
+4. **Confirm**: Click **Send** — the expense is created in Wallet by BudgetBakers
+5. **View / Edit**: The button becomes **Saved in Wallet**; click it to view the Wallet Record ID or edit the record
+
+See [Configuration Guide](./configuration.md#wallet-by-budgetbakers-integration) for setup details.
+
 ## Using the Headless API
 
 You can also use the platform programmatically via REST API:

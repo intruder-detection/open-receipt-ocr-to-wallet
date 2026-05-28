@@ -1,6 +1,8 @@
 import { Component, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { OcrJobService, OCR_PROVIDER_ICONS, LOCAL_PROVIDERS } from '@services/ocr-job.service';
+import { WalletService, WalletAccount, WalletCategory, WalletRecordPayload } from '@services/wallet.service';
+import { ConfigService } from '@services/config.service';
 import { OcrOutputParserService } from '@app/pipes/parsers/ocr-output-parser.service';
 import {
   OcrJob,
@@ -73,6 +75,8 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
   private confirmationService = inject(ConfirmationService);
   private sanitizer = inject(DomSanitizer);
   private ocrOutputParser = inject(OcrOutputParserService);
+  private walletService = inject(WalletService);
+  private configService = inject(ConfigService);
 
   private pollingSubscription?: Subscription;
   private detailPollingSubscription?: Subscription;
@@ -163,6 +167,268 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
     this.selectedExecution = this.getLatestExecution(file) || null;
     this.safeUrl = file ? this.getSafeUrl(file.filename) : null;
     this.imageLoading.set(!!file && this.isFileImage(file.originalName));
+  }
+
+  // Wallet Dialog State
+  showWalletDialog = false;
+  walletDialogReadOnly = false;
+  walletRecordViewId: string | null = null;
+  walletAccounts: WalletAccount[] = [];
+  walletCategories: WalletCategory[] = [];
+  walletCategoriesGrouped: { label: string; items: WalletCategory[] }[] = [];
+  selectedWalletAccount: WalletAccount | null = null;
+  selectedWalletCategory: WalletCategory | null = null;
+  sendingToWallet = false;
+  savingWalletRecord = false;
+  walletAmount: number | null = null;
+  walletDate: string | null = null;
+  walletNote: string | null = null;
+  walletCounterParty: string | null = null;
+  private walletEditSnapshot: {
+    amount: number | null;
+    date: string | null;
+    note: string | null;
+    counterParty: string | null;
+    account: WalletAccount | null;
+    category: WalletCategory | null;
+  } | null = null;
+
+  private buildCategoryGroups(categories: WalletCategory[]) {
+    const groups = new Map<string, WalletCategory[]>();
+    for (const cat of categories) {
+      const groupName = cat.envelope?.groupName || cat.groupName || 'Other';
+      if (!groups.has(groupName)) groups.set(groupName, []);
+      groups.get(groupName)!.push(cat);
+    }
+    this.walletCategoriesGrouped = Array.from(groups.entries())
+      .map(([label, items]) => ({ label, items }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }
+
+  private loadWalletAccountsAndCategories(onAccounts: (accounts: WalletAccount[]) => void, onCategories: (categories: WalletCategory[]) => void) {
+    this.walletService.getAccounts().subscribe({
+      next: onAccounts,
+      error: (err) => console.error('Failed to fetch accounts', err),
+    });
+    this.walletService.getCategories().subscribe({
+      next: (categories) => {
+        this.walletCategories = categories;
+        this.buildCategoryGroups(categories);
+        onCategories(categories);
+      },
+      error: (err) => console.error('Failed to fetch categories', err),
+    });
+  }
+
+  openWalletDialog() {
+    this.walletDialogReadOnly = false;
+    this.walletRecordViewId = null;
+    this.showWalletDialog = true;
+    this.walletAmount = null;
+    this.walletDate = null;
+    this.walletNote = null;
+    this.walletCounterParty = null;
+    this.selectedWalletAccount = null;
+    this.selectedWalletCategory = null;
+
+    this.loadWalletAccountsAndCategories(
+      (accounts) => {
+        this.walletAccounts = accounts;
+      },
+      (categories) => {
+        if (this.selectedExecution?.ocrProvider === OcrProvider.GeminiToWallet && this.selectedExecution.ocrData) {
+          try {
+            const payload = JSON.parse(this.selectedExecution.ocrData) as WalletRecordPayload[];
+            if (payload.length > 0) {
+              const record = payload[0];
+              this.walletAmount = record.amount.value;
+              this.walletDate = record.recordDate ? record.recordDate.substring(0, 16) : null;
+              this.walletNote = record.note;
+              this.walletCounterParty = record.counterParty ?? null;
+              if (record.categoryId) {
+                this.selectedWalletCategory = categories.find((c) => c.id === record.categoryId) ?? null;
+              }
+            }
+          } catch {
+            // ocrData not parseable as WalletRecordPayload, leave fields blank
+          }
+        }
+      },
+    );
+  }
+
+  openWalletRecordView() {
+    const record = this.selectedFile?.walletRecord;
+    if (!record) return;
+
+    this.walletDialogReadOnly = true;
+    this.walletRecordViewId = record.id;
+    this.walletAmount = Math.abs(record.amount);
+    this.walletDate = record.recordDate ? record.recordDate.substring(0, 16) : null;
+    this.walletNote = record.note;
+    this.walletCounterParty = record.counterParty ?? null;
+    this.selectedWalletAccount = null;
+    this.selectedWalletCategory = null;
+    this.showWalletDialog = true;
+
+    this.loadWalletAccountsAndCategories(
+      (accounts) => {
+        this.walletAccounts = accounts;
+        this.selectedWalletAccount = accounts.find((a) => a.id === record.accountId) ?? null;
+      },
+      (categories) => {
+        this.selectedWalletCategory = categories.find((c) => c.id === record.categoryId) ?? null;
+      },
+    );
+  }
+
+  switchToEditMode() {
+    this.walletEditSnapshot = {
+      amount: this.walletAmount,
+      date: this.walletDate,
+      note: this.walletNote,
+      counterParty: this.walletCounterParty,
+      account: this.selectedWalletAccount,
+      category: this.selectedWalletCategory,
+    };
+    this.walletDialogReadOnly = false;
+  }
+
+  cancelEditWallet() {
+    if (this.walletEditSnapshot) {
+      this.walletAmount = this.walletEditSnapshot.amount;
+      this.walletDate = this.walletEditSnapshot.date;
+      this.walletNote = this.walletEditSnapshot.note;
+      this.walletCounterParty = this.walletEditSnapshot.counterParty;
+      this.selectedWalletAccount = this.walletEditSnapshot.account;
+      this.selectedWalletCategory = this.walletEditSnapshot.category;
+      this.walletEditSnapshot = null;
+    }
+    this.walletDialogReadOnly = true;
+  }
+
+  saveWalletRecord() {
+    if (!this.walletRecordViewId || !this.selectedFile?.id) return;
+
+    if (!this.selectedWalletAccount || !this.selectedWalletCategory) {
+      this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Please select an account and a category.' });
+      return;
+    }
+    if (this.walletAmount === null || !this.walletDate || !this.walletNote) {
+      this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Please fill in amount, date and note.' });
+      return;
+    }
+
+    const amount = -Math.abs(this.walletAmount);
+    const recordDate = this.walletDate.length === 16 ? this.walletDate + ':00Z' : this.walletDate;
+    const note = this.walletNote;
+    const counterParty = this.walletCounterParty || undefined;
+
+    this.savingWalletRecord = true;
+    this.walletService
+      .updateRecord(
+        this.walletRecordViewId,
+        this.selectedFile.id,
+        this.selectedWalletAccount.id,
+        this.selectedWalletCategory.id,
+        note,
+        amount,
+        recordDate,
+        counterParty,
+      )
+      .subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Wallet record updated.' });
+          this.selectedFile!.walletRecord = {
+            id: this.walletRecordViewId!,
+            accountId: this.selectedWalletAccount!.id,
+            categoryId: this.selectedWalletCategory!.id,
+            amount,
+            counterParty,
+            note,
+            recordDate,
+          };
+          this.walletEditSnapshot = null;
+          this.savingWalletRecord = false;
+          this.walletDialogReadOnly = true;
+        },
+        error: (err) => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update Wallet record.' });
+          console.error(err);
+          this.savingWalletRecord = false;
+        },
+      });
+  }
+
+  sendToWallet() {
+    const isGeminiToWallet = this.selectedExecution?.ocrProvider === OcrProvider.GeminiToWallet;
+
+    if (!this.selectedWalletAccount || !this.selectedWalletCategory) {
+      this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Please select an account and a category.' });
+      return;
+    }
+
+    let note: string;
+    let amount: number;
+    let recordDate: string;
+    let counterParty: string | undefined;
+
+    if (isGeminiToWallet) {
+      if (this.walletAmount === null || !this.walletDate || !this.walletNote) {
+        this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Please fill in amount, date and note.' });
+        return;
+      }
+      note = this.walletNote;
+      amount = -Math.abs(this.walletAmount);
+      recordDate = this.walletDate.length === 16 ? this.walletDate + ':00Z' : this.walletDate;
+      counterParty = this.walletCounterParty || undefined;
+    } else {
+      if (!this.selectedExecution?.ocrData) {
+        this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'No OCR data available.' });
+        return;
+      }
+      const ocrData = this.selectedExecution.ocrData;
+      const parsed = this.ocrOutputParser.parse(ocrData, this.selectedExecution.ocrProvider);
+      note = parsed && parsed.markdown ? parsed.markdown : ocrData;
+      amount = -0.01;
+      recordDate = new Date().toISOString().split('.')[0] + 'Z';
+    }
+
+    this.sendingToWallet = true;
+    this.walletService
+      .createRecord(this.selectedFile!.id, this.selectedWalletAccount.id, this.selectedWalletCategory.id, note, amount, recordDate, counterParty)
+      .subscribe({
+        next: (res) => {
+          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Sent to Wallet successfully.' });
+
+          if (res.results && res.results.length > 0 && res.results[0].id) {
+            this.selectedFile!.walletRecordId = res.results[0].id;
+            this.selectedFile!.walletRecord = {
+              id: res.results[0].id,
+              accountId: this.selectedWalletAccount!.id,
+              categoryId: this.selectedWalletCategory!.id,
+              amount,
+              counterParty: counterParty || undefined,
+              note,
+              recordDate,
+            };
+          }
+
+          this.showWalletDialog = false;
+          this.sendingToWallet = false;
+          this.selectedWalletAccount = null;
+          this.selectedWalletCategory = null;
+          this.walletAmount = null;
+          this.walletDate = null;
+          this.walletNote = null;
+          this.walletCounterParty = null;
+        },
+        error: (err) => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to send to Wallet.' });
+          console.error(err);
+          this.sendingToWallet = false;
+        },
+      });
   }
 
   onImageLoad() {

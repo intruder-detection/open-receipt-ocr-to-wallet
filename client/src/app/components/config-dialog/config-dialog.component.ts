@@ -5,6 +5,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { ConfigService } from '@services/config.service';
+import { WalletService, WalletConfigResponse } from '@services/wallet.service';
 import { OCR_PROVIDER_ICONS, LOCAL_PROVIDERS } from '@services/ocr-job.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { OcrProvider } from '@open-receipt-ocr/types';
@@ -17,7 +18,10 @@ import { OcrProvider } from '@open-receipt-ocr/types';
 })
 export class ConfigDialogComponent implements OnChanges {
   configService: ConfigService = inject(ConfigService);
+  private walletService = inject(WalletService);
   private translocoService = inject(TranslocoService);
+
+  walletConfig: WalletConfigResponse | null = null;
 
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
@@ -29,7 +33,14 @@ export class ConfigDialogComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['visible']?.currentValue) {
       setTimeout(() => this.updateArrows(), 60);
+      this.loadWalletConfig();
     }
+  }
+
+  private loadWalletConfig() {
+    this.walletService.getConfig().subscribe((config) => {
+      this.walletConfig = config;
+    });
   }
 
   get ocrOptionGroups() {
