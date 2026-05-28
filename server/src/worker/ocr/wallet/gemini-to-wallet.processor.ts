@@ -84,6 +84,8 @@ export class GeminiToWalletProcessor {
 
     const prompt = buildPrompt(recentCategories);
 
+    this.logger.log(`The prompt is: ${JSON.stringify(prompt)}`);
+
     const response = await client.models.generateContent({
       model: geminiModel,
       contents: [
@@ -144,7 +146,9 @@ export class GeminiToWalletProcessor {
       },
     ];
 
-    this.logger.log(`OCR complete for file #${file.id} (execution #${executionId}), category suggested: ${categoryId}`);
+    const suggestedCategoryName = recentCategories.find(c => c.id === categoryId)?.name || 'Unknown';
+
+    this.logger.log(`OCR complete for file #${file.id} (execution #${executionId}), category suggested: ${suggestedCategoryName} (${categoryId})`);
 
     return JSON.stringify(payload);
   }

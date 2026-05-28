@@ -79,7 +79,10 @@ export class WalletService {
   private cachedAccountsTime = 0;
   private cachedCategories: GetCategoriesResponse | null = null;
   private cachedCategoriesTime = 0;
+  private cachedRecentRecords: { categoryId: string }[] | null = null;
+  private cachedRecentRecordsTime = 0;
   private readonly CACHE_TTL = 60 * 60 * 1000; // 1 hour
+  private readonly RECENT_RECORDS_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
   constructor(
     private secretProvider: SecretProvider,
@@ -142,18 +145,26 @@ export class WalletService {
   }
 
   async getRecentRecords(limit = 20): Promise<{ categoryId: string }[]> {
+    const now = Date.now();
+    if (this.cachedRecentRecords && now - this.cachedRecentRecordsTime < this.RECENT_RECORDS_CACHE_TTL) {
+      this.logger.debug('Returning cached recent records');
+      return this.cachedRecentRecords;
+    }
+
     try {
       const headers = await this.getHeaders();
       const response = await fetch(`${this.baseUrl}/v1/api/records?limit=${limit}`, { headers });
       if (!response.ok) {
         this.logger.warn(`Failed to fetch recent records: ${response.statusText}`);
-        return [];
+        return this.cachedRecentRecords || [];
       }
       const data = (await response.json()) as { records?: { categoryId: string }[] };
-      return data.records || [];
+      this.cachedRecentRecords = data.records || [];
+      this.cachedRecentRecordsTime = now;
+      return this.cachedRecentRecords;
     } catch (error) {
       this.logger.warn('Error fetching recent records from BudgetBakers, skipping category hints', error);
-      return [];
+      return this.cachedRecentRecords || [];
     }
   }
 

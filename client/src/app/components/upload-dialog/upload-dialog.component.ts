@@ -219,24 +219,22 @@ export class UploadDialogComponent implements OnInit {
     const files = items.map((i) => i.croppedFile || i.file);
     const providers = items.map((i) => i.ocrProvider as OcrProvider);
 
-    this.ocrJobService
-      .uploadJob(files, providers, this.jobName())
-      .subscribe({
-        next: () => {
-          this.uploading.set(false);
-          this.message.set('upload.uploadSuccess');
-          this.isError.set(false);
-          this.filesWithProviders.set([]);
-          this.uploaded.emit();
-          setTimeout(() => this.close(), 1000);
-        },
-        error: (err) => {
-          this.uploading.set(false);
-          this.message.set('upload.uploadFailed');
-          this.isError.set(true);
-          console.error(err);
-        },
-      });
+    this.ocrJobService.uploadJob(files, providers, this.jobName()).subscribe({
+      next: () => {
+        this.uploading.set(false);
+        this.message.set('upload.uploadSuccess');
+        this.isError.set(false);
+        this.filesWithProviders.set([]);
+        this.uploaded.emit();
+        setTimeout(() => this.close(), 1000);
+      },
+      error: (err) => {
+        this.uploading.set(false);
+        this.message.set('upload.uploadFailed');
+        this.isError.set(true);
+        console.error(err);
+      },
+    });
   }
 
   close() {

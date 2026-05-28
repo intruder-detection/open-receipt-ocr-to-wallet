@@ -171,6 +171,8 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
 
   // Wallet Dialog State
   showWalletDialog = false;
+  walletDialogReadOnly = false;
+  walletRecordViewId: string | null = null;
   walletAccounts: WalletAccount[] = [];
   walletCategories: WalletCategory[] = [];
   walletCategoriesGrouped: { label: string; items: WalletCategory[] }[] = [];
@@ -193,28 +195,43 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
       .sort((a, b) => a.label.localeCompare(b.label));
   }
 
+  private loadWalletAccountsAndCategories(
+    onAccounts: (accounts: WalletAccount[]) => void,
+    onCategories: (categories: WalletCategory[]) => void,
+  ) {
+    this.walletService.getAccounts().subscribe({
+      next: onAccounts,
+      error: (err) => console.error('Failed to fetch accounts', err),
+    });
+    this.walletService.getCategories().subscribe({
+      next: (categories) => {
+        this.walletCategories = categories;
+        this.buildCategoryGroups(categories);
+        onCategories(categories);
+      },
+      error: (err) => console.error('Failed to fetch categories', err),
+    });
+  }
+
   openWalletDialog() {
+    this.walletDialogReadOnly = false;
+    this.walletRecordViewId = null;
     this.showWalletDialog = true;
     this.walletAmount = null;
     this.walletDate = null;
     this.walletNote = null;
+    this.selectedWalletAccount = null;
+    this.selectedWalletCategory = null;
 
-    this.walletService.getAccounts().subscribe({
-      next: (accounts) => {
+    this.loadWalletAccountsAndCategories(
+      (accounts) => {
         this.walletAccounts = accounts;
         const defaultId = this.configService.walletAccountId();
         if (defaultId) {
           this.selectedWalletAccount = accounts.find((a) => a.id === defaultId) ?? null;
         }
       },
-      error: (err) => console.error('Failed to fetch accounts', err),
-    });
-
-    this.walletService.getCategories().subscribe({
-      next: (categories) => {
-        this.walletCategories = categories;
-        this.buildCategoryGroups(categories);
-
+      (categories) => {
         if (this.selectedExecution?.ocrProvider === OcrProvider.GeminiToWallet && this.selectedExecution.ocrData) {
           try {
             const payload = JSON.parse(this.selectedExecution.ocrData) as WalletRecordPayload[];
@@ -232,8 +249,31 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
           }
         }
       },
-      error: (err) => console.error('Failed to fetch categories', err),
-    });
+    );
+  }
+
+  openWalletRecordView() {
+    const record = this.selectedFile?.walletRecord;
+    if (!record) return;
+
+    this.walletDialogReadOnly = true;
+    this.walletRecordViewId = record.id;
+    this.walletAmount = Math.abs(record.amount);
+    this.walletDate = record.recordDate ? record.recordDate.substring(0, 16) : null;
+    this.walletNote = record.note;
+    this.selectedWalletAccount = null;
+    this.selectedWalletCategory = null;
+    this.showWalletDialog = true;
+
+    this.loadWalletAccountsAndCategories(
+      (accounts) => {
+        this.walletAccounts = accounts;
+        this.selectedWalletAccount = accounts.find((a) => a.id === record.accountId) ?? null;
+      },
+      (categories) => {
+        this.selectedWalletCategory = categories.find((c) => c.id === record.categoryId) ?? null;
+      },
+    );
   }
 
   sendToWallet() {
@@ -254,7 +294,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
         return;
       }
       note = this.walletNote;
-      amount = this.walletAmount;
+      amount = -Math.abs(this.walletAmount);
       recordDate = this.walletDate.length === 16 ? this.walletDate + ':00Z' : this.walletDate;
     } else {
       if (!this.selectedExecution?.ocrData) {
@@ -264,7 +304,7 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
       const ocrData = this.selectedExecution.ocrData;
       const parsed = this.ocrOutputParser.parse(ocrData, this.selectedExecution.ocrProvider);
       note = parsed && parsed.markdown ? parsed.markdown : ocrData;
-      amount = 0.01;
+      amount = -0.01;
       recordDate = new Date().toISOString().split('.')[0] + 'Z';
     }
 

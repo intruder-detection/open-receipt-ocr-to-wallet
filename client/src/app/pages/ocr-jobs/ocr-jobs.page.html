@@ -423,7 +423,7 @@
               @if (selectedExecution?.status === OcrExecutionStatus.Completed) { @if (!selectedFile?.walletRecordId) {
               <p-button label="Send To Wallet" icon="pi pi-wallet" severity="success" size="small" (onClick)="openWalletDialog()" />
               } @else {
-              <p-button label="Saved in Wallet" icon="pi pi-check" severity="secondary" size="small" [disabled]="true" />
+              <p-button label="Saved in Wallet" icon="pi pi-check" severity="secondary" size="small" (onClick)="openWalletRecordView()" />
               } }
             </div>
 
@@ -538,14 +538,23 @@
   <!-- Wallet Dialog -->
   <p-dialog
     [(visible)]="showWalletDialog"
-    header="Send to Wallet by BudgetBakers"
+    [header]="walletDialogReadOnly ? 'Wallet Record' : 'Send to Wallet by BudgetBakers'"
     [modal]="true"
     [style]="{ width: '450px' }"
     [draggable]="false"
     [resizable]="false"
   >
     <div class="flex flex-col gap-4 py-4">
-      @if (selectedExecution?.ocrProvider === OcrProvider.GeminiToWallet) {
+      @if (walletDialogReadOnly && walletRecordViewId) {
+      <div class="flex items-center gap-2 p-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
+        <i class="pi pi-verified text-success-500 text-sm"></i>
+        <div class="flex flex-col min-w-0">
+          <span class="text-xs font-bold text-surface-500 uppercase tracking-widest">Wallet Record ID</span>
+          <span class="text-xs font-mono text-surface-700 dark:text-surface-200 truncate">{{ walletRecordViewId }}</span>
+        </div>
+      </div>
+      }
+      @if (selectedExecution?.ocrProvider === OcrProvider.GeminiToWallet || walletDialogReadOnly) {
       <div class="flex gap-3">
         <div class="flex flex-col gap-2 flex-1">
           <label for="walletAmount" class="font-semibold text-sm">Amount</label>
@@ -558,16 +567,17 @@
             min="0"
             placeholder="0.00"
             class="w-full"
+            [disabled]="walletDialogReadOnly"
           />
         </div>
         <div class="flex flex-col gap-2 flex-1">
           <label for="walletDate" class="font-semibold text-sm">Date</label>
-          <input id="walletDate" type="datetime-local" pInputText [(ngModel)]="walletDate" class="w-full" />
+          <input id="walletDate" type="datetime-local" pInputText [(ngModel)]="walletDate" class="w-full" [disabled]="walletDialogReadOnly" />
         </div>
       </div>
       <div class="flex flex-col gap-2">
         <label for="walletNote" class="font-semibold text-sm">Note</label>
-        <textarea id="walletNote" pInputText [(ngModel)]="walletNote" rows="3" class="w-full resize-none"></textarea>
+        <textarea id="walletNote" pInputText [(ngModel)]="walletNote" rows="3" class="w-full resize-none" [disabled]="walletDialogReadOnly"></textarea>
       </div>
       }
       <div class="flex flex-col gap-2">
@@ -581,6 +591,7 @@
           appendTo="body"
           scrollHeight="400px"
           styleClass="w-full"
+          [disabled]="walletDialogReadOnly"
         ></p-select>
       </div>
       <div class="flex flex-col gap-2">
@@ -597,6 +608,7 @@
           appendTo="body"
           scrollHeight="400px"
           styleClass="w-full"
+          [disabled]="walletDialogReadOnly"
         >
           <ng-template #group let-group>
             <span class="font-bold text-surface-900 dark:text-surface-0">{{ group.label }}</span>
@@ -609,8 +621,12 @@
     </div>
     <ng-template #footer>
       <div class="flex justify-end gap-2">
+        @if (walletDialogReadOnly) {
+        <p-button label="Close" severity="secondary" (onClick)="showWalletDialog = false" />
+        } @else {
         <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="showWalletDialog = false" />
         <p-button label="Send" icon="pi pi-check" (onClick)="sendToWallet()" [loading]="sendingToWallet" />
+        }
       </div>
     </ng-template>
   </p-dialog>

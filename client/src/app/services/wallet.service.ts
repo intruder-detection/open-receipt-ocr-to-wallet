@@ -81,7 +81,14 @@ export class WalletService {
     );
   }
 
-  createRecord(fileId: number, accountId: string, categoryId: string, note: string, amount: number, recordDate: string): Observable<WalletRecordResponse> {
+  createRecord(
+    fileId: number,
+    accountId: string,
+    categoryId: string,
+    note: string,
+    amount: number,
+    recordDate: string,
+  ): Observable<WalletRecordResponse> {
     return this.http.post<WalletRecordResponse>(`${this.apiUrl}/records`, {
       fileId,
       accountId,
