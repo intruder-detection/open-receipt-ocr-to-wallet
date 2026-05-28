@@ -179,10 +179,19 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
   selectedWalletAccount: WalletAccount | null = null;
   selectedWalletCategory: WalletCategory | null = null;
   sendingToWallet = false;
+  savingWalletRecord = false;
   walletAmount: number | null = null;
   walletDate: string | null = null;
   walletNote: string | null = null;
   walletCounterParty: string | null = null;
+  private walletEditSnapshot: {
+    amount: number | null;
+    date: string | null;
+    note: string | null;
+    counterParty: string | null;
+    account: WalletAccount | null;
+    category: WalletCategory | null;
+  } | null = null;
 
   private buildCategoryGroups(categories: WalletCategory[]) {
     const groups = new Map<string, WalletCategory[]>();
@@ -275,6 +284,84 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
         this.selectedWalletCategory = categories.find((c) => c.id === record.categoryId) ?? null;
       },
     );
+  }
+
+  switchToEditMode() {
+    this.walletEditSnapshot = {
+      amount: this.walletAmount,
+      date: this.walletDate,
+      note: this.walletNote,
+      counterParty: this.walletCounterParty,
+      account: this.selectedWalletAccount,
+      category: this.selectedWalletCategory,
+    };
+    this.walletDialogReadOnly = false;
+  }
+
+  cancelEditWallet() {
+    if (this.walletEditSnapshot) {
+      this.walletAmount = this.walletEditSnapshot.amount;
+      this.walletDate = this.walletEditSnapshot.date;
+      this.walletNote = this.walletEditSnapshot.note;
+      this.walletCounterParty = this.walletEditSnapshot.counterParty;
+      this.selectedWalletAccount = this.walletEditSnapshot.account;
+      this.selectedWalletCategory = this.walletEditSnapshot.category;
+      this.walletEditSnapshot = null;
+    }
+    this.walletDialogReadOnly = true;
+  }
+
+  saveWalletRecord() {
+    if (!this.walletRecordViewId || !this.selectedFile?.id) return;
+
+    if (!this.selectedWalletAccount || !this.selectedWalletCategory) {
+      this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Please select an account and a category.' });
+      return;
+    }
+    if (this.walletAmount === null || !this.walletDate || !this.walletNote) {
+      this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Please fill in amount, date and note.' });
+      return;
+    }
+
+    const amount = -Math.abs(this.walletAmount);
+    const recordDate = this.walletDate.length === 16 ? this.walletDate + ':00Z' : this.walletDate;
+    const note = this.walletNote;
+    const counterParty = this.walletCounterParty || undefined;
+
+    this.savingWalletRecord = true;
+    this.walletService
+      .updateRecord(
+        this.walletRecordViewId,
+        this.selectedFile.id,
+        this.selectedWalletAccount.id,
+        this.selectedWalletCategory.id,
+        note,
+        amount,
+        recordDate,
+        counterParty,
+      )
+      .subscribe({
+        next: () => {
+          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Wallet record updated.' });
+          this.selectedFile!.walletRecord = {
+            id: this.walletRecordViewId!,
+            accountId: this.selectedWalletAccount!.id,
+            categoryId: this.selectedWalletCategory!.id,
+            amount,
+            counterParty,
+            note,
+            recordDate,
+          };
+          this.walletEditSnapshot = null;
+          this.savingWalletRecord = false;
+          this.walletDialogReadOnly = true;
+        },
+        error: (err) => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to update Wallet record.' });
+          console.error(err);
+          this.savingWalletRecord = false;
+        },
+      });
   }
 
   sendToWallet() {

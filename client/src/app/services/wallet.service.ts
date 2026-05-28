@@ -102,6 +102,28 @@ export class WalletService {
     });
   }
 
+  updateRecord(
+    id: string,
+    fileId: number,
+    accountId: string,
+    categoryId: string,
+    note: string,
+    amount: number,
+    recordDate: string,
+    counterParty?: string,
+  ): Observable<WalletRecordResponse> {
+    return this.http.patch<WalletRecordResponse>(`${this.apiUrl}/records`, {
+      id,
+      fileId,
+      accountId,
+      categoryId,
+      note,
+      amount,
+      recordDate,
+      ...(counterParty ? { counterParty } : {}),
+    });
+  }
+
   getConfig(): Observable<WalletConfigResponse> {
     return this.http.get<WalletConfigResponse>(`${this.apiUrl}/config`);
   }

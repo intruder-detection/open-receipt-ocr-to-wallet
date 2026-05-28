@@ -639,9 +639,16 @@
     </div>
     <ng-template #footer>
       <div class="flex justify-end gap-2">
-        @if (walletDialogReadOnly) {
-        <p-button label="Close" severity="secondary" (onClick)="showWalletDialog = false" />
+        @if (walletDialogReadOnly && walletRecordViewId) {
+        <!-- View mode -->
+        <p-button label="Close" severity="secondary" [text]="true" (onClick)="showWalletDialog = false" />
+        <p-button label="Edit" icon="pi pi-pencil" (onClick)="switchToEditMode()" />
+        } @else if (!walletDialogReadOnly && walletRecordViewId) {
+        <!-- Edit mode (existing record) -->
+        <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="cancelEditWallet()" />
+        <p-button label="Save" icon="pi pi-check" (onClick)="saveWalletRecord()" [loading]="savingWalletRecord" />
         } @else {
+        <!-- Send mode (new record) -->
         <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="showWalletDialog = false" />
         <p-button label="Send" icon="pi pi-check" (onClick)="sendToWallet()" [loading]="sendingToWallet" />
         }

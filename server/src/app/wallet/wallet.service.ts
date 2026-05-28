@@ -1,5 +1,6 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { CreateWalletRecordDto } from './dto/create-wallet-record.dto';
+import { UpdateWalletRecordDto } from './dto/update-wallet-record.dto';
 import { SecretProvider } from '@core/secrets/secret-provider.interface';
 import { AppSecret } from '@core/types/app-secret.enum';
 import { OcrFilesDao } from '@core/database/daos/ocr-files.dao';
@@ -230,6 +231,65 @@ export class WalletService {
     } catch (error) {
       this.logger.error('Error creating record in BudgetBakers', error);
       throw new HttpException(error instanceof Error ? error.message : 'Failed to create record', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async updateRecord(dto: UpdateWalletRecordDto): Promise<CreateRecordsResponse> {
+    try {
+      const note = dto.note && dto.note.length > 255 ? dto.note.substring(0, 252) + '...' : dto.note;
+
+      const payload = [
+        {
+          id: dto.id,
+          accountId: dto.accountId,
+          amount: {
+            value: dto.amount,
+          },
+          categoryId: dto.categoryId,
+          ...(dto.counterParty ? { counterParty: dto.counterParty } : {}),
+          note,
+          paymentType: 'cash',
+          recordDate: dto.recordDate,
+        },
+      ];
+
+      const headers = await this.getHeaders();
+      const response = await fetch(`${this.baseUrl}/v1/api/records`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Failed to update record: ${response.statusText} - ${text}`);
+      }
+
+      const responseBody = (await response.json()) as CreateRecordsResponse;
+
+      if (responseBody.results && responseBody.results.length > 0) {
+        const result = responseBody.results[0];
+        if (result.success !== true) {
+          throw new Error(result.error || 'Unknown error occurred while updating record');
+        }
+
+        const walletRecordData = {
+          id: dto.id,
+          accountId: dto.accountId,
+          categoryId: dto.categoryId,
+          amount: dto.amount,
+          counterParty: dto.counterParty,
+          note,
+          recordDate: dto.recordDate,
+        };
+        await this.ocrFilesDao.updateByPk(NoTxn, dto.fileId, { walletRecord: walletRecordData });
+        this.logger.log(`Updated Wallet Record ${dto.id} for OCR File ${dto.fileId}`);
+      }
+
+      return responseBody;
+    } catch (error) {
+      this.logger.error('Error updating record in BudgetBakers', error);
+      throw new HttpException(error instanceof Error ? error.message : 'Failed to update record', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
