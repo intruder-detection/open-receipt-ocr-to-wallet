@@ -53,11 +53,48 @@ This platform supports multiple OCR engines. You can configure which ones are av
 | :--- | :--- | :--- |
 | **TabScanner** | **Receipt Specialists.** Highly optimized for retail receipts and invoices. | `TAB_SCANNER_API_KEY` |
 | **Google Gemini** | Complex layouts and high accuracy using Gemini 1.5/2.0 models. | `GEMINI_API_KEY` |
+| **Gemini → Wallet** ⭐ | **Full end-to-end flow.** Extracts amount, date, items, merchant and pushes the record directly to Wallet by BudgetBakers. | `GEMINI_API_KEY`, `BUDGET_BAKERS_TOKEN`, `USE_WALLET_OCR_PROCESSOR_PROVIDER=true` |
 | **OpenAI** | Reliable performance using GPT-4o vision capabilities. | `OPENAI_API_KEY` |
 | **Mistral OCR** | Native document understanding via Mistral's latest vision models. | `MISTRAL_API_KEY` |
 | **xAI Grok** | Specialized vision-language processing via Grok-2. | `XAI_API_KEY` |
 | **AWS Textract** | Enterprise-grade document extraction from AWS. | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` |
 | **PaddleOCR API** | Hosted version of PaddleOCR for low-latency cloud processing. | `PADDLE_OCR_ENDPOINT`, `PADDLE_OCR_API_KEY` |
+
+---
+
+## 🏦 Wallet by BudgetBakers Integration
+
+The **Gemini → Wallet** provider (`gemini-to-wallet`) delivers a fully automated receipt-to-expense flow:
+
+1. **Upload** — select your receipt file(s); no account or category selection needed at upload time.
+2. **AI Extraction** — Gemini reads the receipt and extracts amount, date, line items, and merchant name. It also fetches your 20 most-recent Wallet transactions to learn which categories you use most, then suggests the best-matching category.
+3. **Review & Send** — after OCR completes, click **Send To Wallet** to open a pre-filled form showing:
+   - Amount (negative, as an expense)
+   - Date & time from the receipt
+   - Line-item note (one item per line)
+   - Merchant name (`counterParty`)
+   - Category (AI-suggested, changeable)
+   - Account (selected in the dialog, not editable once saved)
+4. **Confirm** — click **Send** to create the record in Wallet. The UI switches to a read-only view showing the Wallet Record ID.
+5. **Edit** — click **Edit** at any time to update category, amount, date, note, or merchant. Changes are patched directly in Wallet via `PATCH /wallet/records`.
+
+### Configuration
+
+```env
+# Enable the Gemini → Wallet provider
+USE_WALLET_OCR_PROCESSOR_PROVIDER=true
+
+# Google Gemini (required when USE_WALLET_OCR_PROCESSOR_PROVIDER is true)
+GEMINI_API_KEY=your_gemini_key
+GEMINI_MODEL=gemini-2.5-flash   # optional, defaults to gemini-2.5-flash
+
+# BudgetBakers Wallet API token (required)
+BUDGET_BAKERS_TOKEN=your_budgetbakers_token
+```
+
+> [!TIP]
+> Obtain your BudgetBakers token from the [Wallet web app](https://web.budgetbakers.com) under **Settings → API**.
+> Available accounts and categories can be browsed via `GET /wallet/accounts` and `GET /wallet/categories`.
 
 ---
 

@@ -234,10 +234,6 @@ export class OcrJobsPageComponent implements OnInit, OnDestroy {
     this.loadWalletAccountsAndCategories(
       (accounts) => {
         this.walletAccounts = accounts;
-        const defaultId = this.configService.walletAccountId();
-        if (defaultId) {
-          this.selectedWalletAccount = accounts.find((a) => a.id === defaultId) ?? null;
-        }
       },
       (categories) => {
         if (this.selectedExecution?.ocrProvider === OcrProvider.GeminiToWallet && this.selectedExecution.ocrData) {

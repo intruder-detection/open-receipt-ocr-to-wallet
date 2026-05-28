@@ -56,8 +56,6 @@ export interface CreateRecordsResponse {
 
 export interface WalletConfigResponse {
   useWalletOcrProcessorProvider: boolean;
-  defaultAccountId?: string;
-  defaultCategoryId?: string;
 }
 
 export interface WalletRecordPayload {
@@ -295,14 +293,8 @@ export class WalletService {
 
   async getConfig(): Promise<WalletConfigResponse> {
     const useWalletStr = await this.secretProvider.getSecret(AppSecret.UseWalletOcrProcessorProvider);
-    const useWalletOcrProcessorProvider = useWalletStr === 'true';
-    const defaultAccountId = (await this.secretProvider.getSecret(AppSecret.DefaultWalletAccountId)) || undefined;
-    const defaultCategoryId = (await this.secretProvider.getSecret(AppSecret.DefaultWalletCategoryId)) || undefined;
-
     return {
-      useWalletOcrProcessorProvider,
-      defaultAccountId,
-      defaultCategoryId,
+      useWalletOcrProcessorProvider: useWalletStr === 'true',
     };
   }
 }

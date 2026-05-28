@@ -220,6 +220,126 @@ Remove a specific file from a job.
 curl -X DELETE http://localhost:3000/ocr-jobs/123/files/1
 ```
 
+## Wallet by BudgetBakers
+
+These endpoints proxy requests to the BudgetBakers Wallet API and are only meaningful when `USE_WALLET_OCR_PROCESSOR_PROVIDER=true` and `BUDGET_BAKERS_TOKEN` is configured.
+
+### Get Wallet Configuration
+
+Returns the current Wallet integration settings (feature flag + defaults).
+
+**Endpoint:** `GET /wallet/config`
+
+**Response:**
+
+```json
+{
+  "useWalletOcrProcessorProvider": true
+}
+```
+
+### List Wallet Accounts
+
+Returns all accounts from BudgetBakers (cached for 1 hour).
+
+**Endpoint:** `GET /wallet/accounts`
+
+**Response:**
+
+```json
+{
+  "accounts": [
+    { "id": "36f3d28e-ab72-492b-aa8f-14d2d77d00d9", "name": "Genérico" }
+  ]
+}
+```
+
+### List Wallet Categories
+
+Returns all expense categories from BudgetBakers (cached for 1 hour).
+
+**Endpoint:** `GET /wallet/categories`
+
+**Response:**
+
+```json
+{
+  "categories": [
+    {
+      "id": "5c5c03e9-000a-8000-8000-000000000000",
+      "name": "Restaurants & fast food",
+      "envelope": { "groupName": "Food & Drink" }
+    }
+  ]
+}
+```
+
+### Create a Wallet Record
+
+Creates a new expense record in BudgetBakers and stores the association in the local database.
+
+**Endpoint:** `POST /wallet/records`
+
+**Request Body:**
+
+```json
+{
+  "fileId": 12,
+  "accountId": "36f3d28e-ab72-492b-aa8f-14d2d77d00d9",
+  "categoryId": "5c5c03e9-000a-8000-8000-000000000000",
+  "note": "1x Burger (8.50)\n1x Fries (3.84)",
+  "amount": -12.34,
+  "recordDate": "2025-03-15T13:22:00Z",
+  "counterParty": "Downtown Bistro"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `fileId` | Number | Yes | ID of the OCR file to associate this record with |
+| `accountId` | String | Yes | BudgetBakers account UUID |
+| `categoryId` | String | Yes | BudgetBakers category UUID |
+| `note` | String | Yes | Expense description (max 255 chars) |
+| `amount` | Number | Yes | Expense amount — **must be negative** for expenses |
+| `recordDate` | String | Yes | ISO 8601 datetime of the transaction |
+| `counterParty` | String | No | Merchant / store name |
+
+**Response:**
+
+```json
+{
+  "summary": { "total": 1, "succeeded": 1, "clientErrors": 0, "serverErrors": 0 },
+  "results": [{ "inputIndex": 0, "success": true, "id": "wallet-record-uuid" }]
+}
+```
+
+### Update a Wallet Record
+
+Updates an existing expense record in BudgetBakers. The account cannot be changed after creation.
+
+**Endpoint:** `PATCH /wallet/records`
+
+**Request Body:**
+
+```json
+{
+  "id": "wallet-record-uuid",
+  "fileId": 12,
+  "accountId": "36f3d28e-ab72-492b-aa8f-14d2d77d00d9",
+  "categoryId": "5c5c03e9-000a-8000-8000-000000000000",
+  "note": "1x Burger (8.50)\n1x Fries (3.84)",
+  "amount": -12.34,
+  "recordDate": "2025-03-15T13:22:00Z",
+  "counterParty": "Downtown Bistro"
+}
+```
+
+Same fields as create, plus `id` (the Wallet Record UUID returned on creation). The `accountId` is stored locally but not sent to BudgetBakers (it cannot be changed via the API).
+
+**Response:** Same shape as create.
+
+---
+
 ## Health Check
 
 Check if the API is running and healthy.

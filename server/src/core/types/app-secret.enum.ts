@@ -78,8 +78,6 @@ export enum AppSecret {
 
   // ─── Wallet OCR Feature Flags ─────────────────────────────────────────────────
   UseWalletOcrProcessorProvider = 'USE_WALLET_OCR_PROCESSOR_PROVIDER',
-  DefaultWalletAccountId = 'DEFAULT_WALLET_ACCOUNT_ID',
-  DefaultWalletCategoryId = 'DEFAULT_WALLET_CATEGORY_ID',
 }
 
 /**

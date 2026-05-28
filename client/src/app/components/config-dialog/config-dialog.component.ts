@@ -5,7 +5,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { SelectModule } from 'primeng/select';
 import { ConfigService } from '@services/config.service';
-import { WalletService, WalletAccount, WalletCategory, WalletConfigResponse } from '@services/wallet.service';
+import { WalletService, WalletConfigResponse } from '@services/wallet.service';
 import { OCR_PROVIDER_ICONS, LOCAL_PROVIDERS } from '@services/ocr-job.service';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { OcrProvider } from '@open-receipt-ocr/types';
@@ -22,10 +22,6 @@ export class ConfigDialogComponent implements OnChanges {
   private translocoService = inject(TranslocoService);
 
   walletConfig: WalletConfigResponse | null = null;
-  walletAccounts = signal<WalletAccount[]>([]);
-  walletCategories = signal<WalletCategory[]>([]);
-  walletAccountId = signal<string | null>(null);
-  walletCategoryId = signal<string | null>(null);
 
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
@@ -44,13 +40,6 @@ export class ConfigDialogComponent implements OnChanges {
   private loadWalletConfig() {
     this.walletService.getConfig().subscribe((config) => {
       this.walletConfig = config;
-      if (config.useWalletOcrProcessorProvider) {
-        // Prefer locally stored IDs (from previous settings save), then fall back to env-var defaults from server
-        this.walletAccountId.set(this.configService.walletAccountId() || config.defaultAccountId || null);
-        this.walletCategoryId.set(this.configService.walletCategoryId() || config.defaultCategoryId || null);
-        this.walletService.getAccounts().subscribe((accounts) => this.walletAccounts.set(accounts));
-        this.walletService.getCategories().subscribe((categories) => this.walletCategories.set(categories));
-      }
     });
   }
 
@@ -170,14 +159,6 @@ export class ConfigDialogComponent implements OnChanges {
 
   save() {
     this.configService.saveConfig();
-
-    if (this.walletConfig?.useWalletOcrProcessorProvider) {
-      // Store wallet IDs in ConfigService (localStorage) so the upload dialog can pre-fill them
-      this.configService.walletAccountId.set(this.walletAccountId());
-      this.configService.walletCategoryId.set(this.walletCategoryId());
-      this.configService.saveConfig();
-    }
-
     this.close();
   }
 }

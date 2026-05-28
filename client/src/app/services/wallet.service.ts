@@ -6,8 +6,6 @@ import { environment } from '@environments/environment';
 
 export interface WalletConfigResponse {
   useWalletOcrProcessorProvider: boolean;
-  defaultAccountId?: string;
-  defaultCategoryId?: string;
 }
 
 export interface WalletAccount {
