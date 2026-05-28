@@ -545,7 +545,7 @@
     [resizable]="false"
   >
     <div class="flex flex-col gap-4 py-4">
-      @if (walletDialogReadOnly && walletRecordViewId) {
+      @if (walletRecordViewId) {
       <div class="flex items-center gap-2 p-3 rounded-xl bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700">
         <i class="pi pi-verified text-success-500 text-sm"></i>
         <div class="flex flex-col min-w-0">
@@ -609,7 +609,7 @@
           appendTo="body"
           scrollHeight="400px"
           styleClass="w-full"
-          [disabled]="walletDialogReadOnly"
+          [disabled]="walletDialogReadOnly || !!walletRecordViewId"
         ></p-select>
       </div>
       <div class="flex flex-col gap-2">
@@ -646,7 +646,7 @@
         } @else if (!walletDialogReadOnly && walletRecordViewId) {
         <!-- Edit mode (existing record) -->
         <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="cancelEditWallet()" />
-        <p-button label="Save" icon="pi pi-check" (onClick)="saveWalletRecord()" [loading]="savingWalletRecord" />
+        <p-button label="Update" icon="pi pi-check" (onClick)="saveWalletRecord()" [loading]="savingWalletRecord" />
         } @else {
         <!-- Send mode (new record) -->
         <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="showWalletDialog = false" />

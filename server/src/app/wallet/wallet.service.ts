@@ -216,6 +216,7 @@ export class WalletService {
             accountId: dto.accountId,
             categoryId: dto.categoryId,
             amount: dto.amount,
+            counterParty: dto.counterParty,
             note: note,
             recordDate: dto.recordDate,
           };
@@ -241,7 +242,6 @@ export class WalletService {
       const payload = [
         {
           id: dto.id,
-          accountId: dto.accountId,
           amount: {
             value: dto.amount,
           },
