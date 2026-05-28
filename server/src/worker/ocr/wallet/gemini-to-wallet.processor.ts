@@ -6,7 +6,6 @@ import { SecretProvider } from '@core/secrets/secret-provider.interface';
 import { StorageProvider } from '@core/storage/storage-provider.interface';
 import { FileExtension } from '@open-receipt-ocr/types';
 import { OcrFileEntity } from '@core/database/entities/ocr-file.entity';
-import { OcrExecutionEntity } from '@core/database/entities/ocr-execution.entity';
 import { getMimeType } from '@worker/ocr/utils/mime-type.util';
 import { streamToBase64 } from '@worker/ocr/utils/stream.util';
 import { WalletService, WalletRecordPayload } from '@app/wallet/wallet.service';
@@ -47,30 +46,33 @@ export class GeminiToWalletProcessor {
     @Inject(SecretProvider) private readonly secretProvider: SecretProvider,
     private readonly storage: StorageProvider,
     private readonly walletService: WalletService,
-  ) {
-  }
+  ) {}
 
   async process(file: OcrFileEntity, executionId: number): Promise<string> {
     const apiKey = await this.secretProvider.getSecretOrThrow(AppSecret.GeminiApiKey);
     const geminiModel = await this.secretProvider.getSecretOrThrow(AppSecret.GeminiModel);
     const client = new GoogleGenAI({ apiKey });
 
-    const [recentRecords, categoriesResponse] = await Promise.all([
-      this.walletService.getRecentRecords(20),
-      this.walletService.getCategories(),
-    ]);
+    const [recentRecords, categoriesResponse] = await Promise.all([this.walletService.getRecentRecords(20), this.walletService.getCategories()]);
 
     const allCategories = categoriesResponse.categories;
     const usedCategoryIds = new Set(recentRecords.map((r) => r.categoryId).filter(Boolean));
+    const getGroupName = (c: { [key: string]: unknown }): string => {
+      const envelope = c['envelope'] as Record<string, unknown> | undefined;
+      if (envelope && typeof envelope['groupName'] === 'string') return envelope['groupName'];
+      if (typeof c['groupName'] === 'string') return c['groupName'];
+      return '';
+    };
+
     let recentCategories = allCategories
       .filter((c) => usedCategoryIds.has(c.id))
-      .map((c) => ({ id: c.id, name: c.name, groupName: c.envelope?.['groupName'] ?? (c as any).groupName ?? '' }));
+      .map((c) => ({ id: c.id, name: c.name, groupName: getGroupName(c) }));
 
     if (recentCategories.length === 0) {
       recentCategories = allCategories.slice(0, 20).map((c) => ({
         id: c.id,
         name: c.name,
-        groupName: c.envelope?.['groupName'] ?? (c as { groupName: string }).groupName ?? '',
+        groupName: getGroupName(c),
       }));
     }
 
@@ -100,7 +102,7 @@ export class GeminiToWalletProcessor {
       recordDate: string;
       note: string;
       extraction_scratchpad: string;
-      categoryId: string
+      categoryId: string;
     };
     try {
       const responseText = response.text || '{}';

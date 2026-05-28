@@ -8,13 +8,13 @@ import { NoTxn } from '@core/database/txn-def.interface';
 export interface WalletAccount {
   id: string;
   name: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface WalletCategory {
   id: string;
   name: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface WalletPaginatedResponse {
